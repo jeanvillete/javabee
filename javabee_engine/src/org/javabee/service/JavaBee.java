@@ -4,6 +4,7 @@
 package org.javabee.service;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import org.javabee.entities.JarTO;
@@ -15,8 +16,8 @@ import org.javabee.entities.JavaBeeTO;
  */
 public interface JavaBee {
 
-	List<JarTO> listJars();
-	JavaBeeTO getCurrentState();
-	void updateState() throws FileNotFoundException;
+	List<JarTO> listJars() throws IOException;
+	JavaBeeTO getCurrentState() throws IOException;
+	void updateState() throws FileNotFoundException, IOException;
 	
 }

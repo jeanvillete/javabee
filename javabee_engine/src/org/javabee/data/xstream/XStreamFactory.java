@@ -6,9 +6,11 @@ package org.javabee.data.xstream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
-import org.javabee.constants.JavaBeeConstants;
+import org.javabee.commons.JavaBeeConstants;
+import org.javabee.commons.JavaBeeUtils;
 import org.javabee.entities.DependencyTO;
 import org.javabee.entities.JarTO;
 import org.javabee.entities.JavaBeeTO;
@@ -54,16 +56,22 @@ public class XStreamFactory {
 		return INSTANCE;
 	}
 	
-	public void persistData() throws FileNotFoundException {
-		OutputStream os = new FileOutputStream(new File(JavaBeeConstants.DATA_FILE_ADDRESS));
+	public void persistData() throws IOException {
+		OutputStream os = new FileOutputStream(this.getFileData());
 		this.xStream.toXML(this.currentState, os);
 	}
 	
-	public JavaBeeTO getCurrentState() {
+	public JavaBeeTO getCurrentState() throws IOException {
 		if (this.currentState == null) {
-			this.currentState = (JavaBeeTO) this.xStream.fromXML(new File(JavaBeeConstants.DATA_FILE_ADDRESS));
+			this.currentState = (JavaBeeTO) this.xStream.fromXML(this.getFileData());
 		}
 		return this.currentState;
+	}
+	
+	private File getFileData() throws IOException {
+		return new File(JavaBeeUtils.getBaseDir().getCanonicalPath() +
+				System.getProperty("file.separator") +
+				JavaBeeConstants.DATA_FILE_ADDRESS);
 	}
 	
 }
