@@ -1,0 +1,45 @@
+<project name="javabee_engine" default="dist-javabee" basedir=".">
+	
+	<tstamp>
+		<format property="day" pattern="yyyyMMdd.HHmm"/>
+	</tstamp>
+	
+	<property name="javabee" value="${ant.project.name}"/>
+	<property name="javabee-home" value="../${javabee}"/>
+	<property name="javabee-home-dist" value="${javabee-home}/dist"/>
+	<property name="javabee-home-temp" value="${javabee-home-dist}/temp/"/>
+	<property name="javabee-home-project" value="${javabee-home-temp}/${ant.project.name}"/>
+	<property name="javabee-home-temp-bin" value="${javabee-home-project}/bin"/>
+	<property name="javabee-home-temp-dependencies" value="${javabee-home-temp-bin}/dependencies"/>
+	<property name="javabee-home-temp-xmldata" value="${javabee-home-temp-bin}/data"/>
+	<property name="javabee-jar" value="${javabee-home-project}/bin/${javabee}.jar"/>
+	<property name="javabee-zip" value="${javabee-home-dist}/${javabee}.${day}.zip"/>
+	
+	<target name="dist-javabee">
+		<mkdir dir="${javabee-home-project}"/>
+		<mkdir dir="${javabee-home-project}/bin/dependencies"/>
+		<mkdir dir="${javabee-home-project}/bin/data"/>
+		<mkdir dir="${javabee-home-project}/library"/>
+		
+		<copy todir="${javabee-home-temp-bin}">
+			<fileset dir="${javabee-home}/scripts"/>
+		</copy>
+		<copy todir="${javabee-home-temp-dependencies}">
+			<fileset dir="${javabee-home}/dependencies"/>
+		</copy>
+		<copy todir="${javabee-home-temp-xmldata}">
+			<fileset dir="${javabee-home}/data"/>
+		</copy>
+		
+		<!-- genereting javabee jar file -->
+		<zip destfile="${javabee-jar}">
+		    <zipfileset dir="${javabee-home}/bin" />
+		</zip>
+
+		<zip destfile="${javabee-zip}">
+		    <zipfileset dir="${javabee-home-temp}" />
+		</zip>
+		
+		<delete dir="${javabee-home-temp}"/>
+	</target>
+</project>
