@@ -5,9 +5,10 @@ rem 2012 12 29
 rem ---------------------------------------------------------------------------
 if "%JAVA_HOME%" == "" goto jvmNotDefined
 :gotExecute
-call "%JAVA_HOME%\bin\java" -jar javabee_engine.jar %1
+set CURRENT_DIR=%~dp0
+call "%JAVA_HOME%\bin\java" -jar "%CURRENT_DIR%javabee_engine.jar" %*
 goto end
 :jvmNotDefined
 echo JAVA_HOME not defined
-echo No valid value was defined to environment variable JAVA_HOME, please, do it before!
+echo No valid value was defined to JAVA_HOME environment variable, please, do it before!
 :end

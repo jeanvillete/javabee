@@ -3,7 +3,7 @@
  */
 package org.javabee.service.impl;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,17 +19,17 @@ import org.javabee.service.JavaBee;
 public class JavaBeeBO implements JavaBee {
 
 	@Override
-	public List<JarTO> listJars() {
+	public List<JarTO> listJars() throws IOException {
 		return new ArrayList<JarTO>(XStreamFactory.getInstance().getCurrentState().getJars().values());
 	}
 
 	@Override
-	public JavaBeeTO getCurrentState() {
+	public JavaBeeTO getCurrentState() throws IOException {
 		return XStreamFactory.getInstance().getCurrentState();
 	}
 
 	@Override
-	public void updateState() throws FileNotFoundException {
+	public void updateState() throws IOException {
 		XStreamFactory.getInstance().persistData();
 	}
 	
