@@ -125,6 +125,31 @@ public class ConsoleBO implements Console {
 	}
 	
 	@Override
+	public void delete(String idJar) {
+		try {
+			JavaBeeTO javabee = this.javabeeService.getCurrentState();
+			JarTO jar=null;
+			if ((jar = javabee.getJars().remove(idJar)) != null) {
+				File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
+				fileInsideLibrary.delete();
+				File folderVersion = fileInsideLibrary.getParentFile();
+				folderVersion.delete();
+				File jarNameFolder = folderVersion.getParentFile();
+				if (!(jarNameFolder.list().length > 0)) {
+					jarNameFolder.delete();
+				}
+				this.javabeeService.updateState();
+				System.out.println("Jar removed successfully! Jar Id: " + idJar);
+			} else {
+				throw new IllegalArgumentException("Command failed! Jar Id: " + idJar + " not found.");
+			}
+		} catch (Exception e) {
+			System.out.println("1[" + e.getMessage() + "]");
+			return;
+		}
+	}
+	
+	@Override
 	public void printVersion() {
 		System.out.println("command javabee -version: " + JavaBeeConstants.JAVA_BEE_VERSION);
 	}
