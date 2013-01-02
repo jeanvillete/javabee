@@ -29,8 +29,10 @@ class JavaBeeExecutable {
 	        cmd.add("-mount"); 
 	        cmd.add("-lib"); 
 	        cmd.add("\"" + this.configs.getDesiredLibraries() + "\"");
-	        cmd.add("-md");
-	        cmd.add(this.configs.getManageDependencies().toString());
+	        if (this.configs.getManageDependencies() != null) {
+	        	cmd.add("-md");
+	        	cmd.add(this.configs.getManageDependencies().toString());
+	        }
 	        cmd.add("-fc");
 	
 	        ProcessBuilder pb = new ProcessBuilder();

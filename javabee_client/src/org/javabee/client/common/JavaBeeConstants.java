@@ -7,4 +7,10 @@ public interface JavaBeeConstants {
 	String				APP_RELATIVE_PATH = "bin" + FILE_SEPARATOR + "javabee" + OS_SCRIPT_EXTENSION;
 	String 				END_OF_LINE = "\n";
 	
+	// WEB LISTENER PARAMETERS
+	String				WEB_PARAM_FULL_PATH = "org.javabee.client.web.JAVABEE_FULL_PATH";
+	String				WEB_PARAM_ENVIRONMENT_VARIABLE = "org.javabee.client.web.JAVABEE_ENVIRONMENT_VARIABLE";
+	String				WEB_PARAM_LIBRARIES = "org.javabee.client.web.JAVABEE_LIBRARIES";
+	String				WEB_PARAM_MANAGE_DEPENDENCIES = "org.javabee.client.web.JAVABEE_MANAGE_DEPENDENCIES";
+	
 }
