@@ -1,0 +1,20 @@
+<project name="javabee_client" default="dist-javabee-client" basedir=".">
+	
+	<tstamp>
+		<format property="day" pattern="yyyyMMdd.HHmm"/>
+	</tstamp>
+	
+	<property name="javabee" value="${ant.project.name}"/>
+	<property name="javabee-home" value="../${javabee}"/>
+	<property name="javabee-home-project" value="${javabee-home}/bin"/>
+	<property name="javabee-home-dist" value="${javabee-home}/dist"/>
+	<property name="javabee-jar" value="${javabee-home-dist}/${javabee}.${day}.jar"/>
+	
+	<target name="dist-javabee-client">
+		<mkdir dir="${javabee-home-dist}"/>
+		
+		<zip destfile="${javabee-jar}">
+		    <zipfileset dir="${javabee-home-project}" />
+		</zip>
+	</target>
+</project>

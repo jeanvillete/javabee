@@ -9,17 +9,13 @@ import org.javabee.client.common.JavaBeeConstants;
  * @author Jean Villete
  *
  */
-public class JavaBeeConfigs {
+public abstract class JavaBeeConfigs {
 
 	private String				javabeeTargetScript;
 	private String				desiredLibraries;
 	private Boolean				manageDependencies;
 	
-	public JavaBeeConfigs(String javabeeHome, String desiredLibraries) {
-		this(javabeeHome, desiredLibraries, null);
-	}
-	
-	public JavaBeeConfigs(String javabeeHome, String desiredLibraries, Boolean manageDependencies) {
+	void setSettings(String javabeeHome, String desiredLibraries, Boolean manageDependencies) {
 		if (javabeeHome == null || javabeeHome.isEmpty()) {
 			throw new IllegalArgumentException("parameter executableAddress is null or empty");
 		}
