@@ -13,7 +13,7 @@ public interface Console {
 	
 	void printHelp();
 	void printVersion();
-	void list();
+	void list(ConsoleParameters consoleParameter);
 	void add();
 	void delete(String idJar);
 	void mount(ConsoleParameters consoleParameter);

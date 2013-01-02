@@ -33,7 +33,7 @@ public class Main {
 		}
 		// list
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-list")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-l"))) {
-			ServiceFactory.getInstance().getConsole().list();
+			ServiceFactory.getInstance().getConsole().list(consoleParameter);
 			return;
 		}
 		// add
