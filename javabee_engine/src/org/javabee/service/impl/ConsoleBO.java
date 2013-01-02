@@ -20,15 +20,17 @@ public class ConsoleBO implements Console {
 	
 	@Override
 	public void mount(ConsoleParameters consoleParameter) {
+		boolean fromClient = GeneralsHelper.isStringOk(consoleParameter.getValue("-from_client")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-fc"));
 		try {
-			System.out.print("command javabee -mount\n\n");
+			if (!fromClient) {
+				System.out.print("command javabee -mount\n\n");
+			}
 			// libraries parameter
 			String libraries = consoleParameter.getValue("-libraries");
 			if (!GeneralsHelper.isStringOk(libraries)) {
 				libraries = consoleParameter.getValue("-lib");
 				if (!GeneralsHelper.isStringOk(libraries)) {
-					System.out.println("Parameter not -libraries or -lib not found, and it's mandatory to -mount command");
-					return;
+					throw new IllegalArgumentException("Parameter not -libraries or -lib not found, and it's mandatory to -mount command");
 				}
 			}
 			// managed dependencies parameter
@@ -50,9 +52,17 @@ public class ConsoleBO implements Console {
 				File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
 				FileUtils.copyFileToDirectory(fileInsideLibrary, tmpDir);
 			}
-			System.out.println("0["+ tmpDir.getCanonicalPath() +"]");
+			if (fromClient) {
+				System.out.print("0,"+tmpDir.getCanonicalPath());
+			} else {
+				System.out.print("0[\""+ tmpDir.getCanonicalPath() +"\"]");
+			}
 		} catch (Exception e) {
-			System.out.println("1[" + e.getMessage() + "]");
+			if (fromClient) {
+				System.out.print("1," + e.getMessage());
+			} else {
+				System.out.print("1[\"" + e.getMessage() + "\"]");
+			}
 			return;
 		}
 	}
