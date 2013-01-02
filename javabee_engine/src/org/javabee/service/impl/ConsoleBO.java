@@ -1,6 +1,7 @@
 package org.javabee.service.impl;
 
 import java.io.File;
+import java.util.List;
 import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
@@ -68,22 +69,85 @@ public class ConsoleBO implements Console {
 	}
 	
 	@Override
-	public void list() {
+	public void list(ConsoleParameters consoleParameter) {
 		try {
 			System.out.print("command javabee -list\n\n");
-			for (JarTO jar : this.javabeeService.listJars()) {
-				System.out.println("id:\t\t" + jar.getId());
-				System.out.println("name:\t\t" + jar.getName());
-				System.out.println("version:\t" + jar.getVersion());
-				System.out.println("filename:\t" + jar.getFilename());
-				if (GeneralsHelper.isCollectionOk(jar.getListDependencies()))
-					for (DependencyTO dependency : jar.getListDependencies())
-						System.out.println("+ dependency id: " + dependency.getId());
-				System.out.println();
+			boolean showHeader = true;
+			String showHeaderParam = null;
+			if ((showHeaderParam = consoleParameter.getValue("-show_header")) != null || (showHeaderParam = consoleParameter.getValue("-sh")) != null) {
+				showHeader = showHeaderParam.equals("true") || showHeaderParam.equals("1") ||
+						showHeaderParam.equals("yes") || showHeaderParam.equals("y");
+			}
+			String columns = null;
+			if ((columns = consoleParameter.getValue("-columns")) == null) {
+				 columns = consoleParameter.getValue("-c");
+			}
+			boolean showDependencies = true;
+			String showDependenciesParam = null;
+			if ((showDependenciesParam = consoleParameter.getValue("-show_dependencies")) != null || (showDependenciesParam = consoleParameter.getValue("-sd")) != null) {
+				showDependencies = showDependenciesParam.equals("true") || showDependenciesParam.equals("1") ||
+						showDependenciesParam.equals("yes") || showDependenciesParam.equals("y");
+			}
+			
+			// check show header
+			if (showHeader) {
+				this.printListWithHeader(this.javabeeService.listJars(), columns, showDependencies);
+			} else {
+				this.printListWithoutHeader(this.javabeeService.listJars(), columns, showDependencies);
 			}
 		} catch (Exception e) {
 			System.out.println("1[" + e.getMessage() + "]");
 			return;
+		}
+	}
+	
+	private void printListWithoutHeader(List<JarTO> listJar, String columns, boolean showDependencies) {
+		if (!GeneralsHelper.isStringOk(columns)) {
+			columns = "id,name,version,filename";
+		}
+		for (JarTO jar : listJar) {
+			if (columns.contains("id")) {
+				System.out.println(jar.getId());
+			}
+			if (columns.contains("name")) {
+				System.out.println(jar.getName());
+			}
+			if (columns.contains("version")) {
+				System.out.println(jar.getVersion());
+			}
+			if (columns.contains("filename")) {
+				System.out.println(jar.getFilename());
+			}
+			if (showDependencies) {
+				if (GeneralsHelper.isCollectionOk(jar.getListDependencies()))
+					for (DependencyTO dependency : jar.getListDependencies())
+						System.out.println("+" + dependency.getId());
+			}
+		}
+	}
+	
+	private void printListWithHeader(List<JarTO> listJar, String columns, boolean showDependencies) {
+		if (!GeneralsHelper.isStringOk(columns)) {
+			columns = "id,name,version,filename";
+		}
+		for (JarTO jar : listJar) {
+			if (columns.contains("id")) {
+				System.out.println("id:\t\t" + jar.getId());
+			}
+			if (columns.contains("name")) {
+				System.out.println("name:\t\t" + jar.getName());
+			}
+			if (columns.contains("version")) {
+				System.out.println("version:\t" + jar.getVersion());
+			}
+			if (columns.contains("filename")) {
+				System.out.println("filename:\t" + jar.getFilename());
+			}
+			if (showDependencies) {
+				if (GeneralsHelper.isCollectionOk(jar.getListDependencies()))
+					for (DependencyTO dependency : jar.getListDependencies())
+						System.out.println("+ dependency id: " + dependency.getId());
+			}
 		}
 	}
 	
@@ -161,6 +225,9 @@ public class ConsoleBO implements Console {
 		helpMessage.append("  -help[-h]                      show the possible actions with its needed parameters\n");
 		helpMessage.append("  -version[-v]                   show the version of the current JavaBee\n");
 		helpMessage.append("  -list[-l]                      show all libraries actually stored\n");
+		helpMessage.append("    -columns[-c]                   list with select columns (id, name, version, filename)\n");
+		helpMessage.append("    -show_header[-sh]              list with or without header (true/1 or false/0)\n");
+		helpMessage.append("    -show_dependencies[-sd]        list with or without dependencies (true/1 or false/0)\n");
 		helpMessage.append("  -add(wizard prompt)            command used to add a new library to JavaBee manage\n");
 		helpMessage.append("  -delete[-d] \"jar id\"           command to delete a library from the current JavaBee\n");
 		helpMessage.append("  -update[-u] \"jar id\"           command to update info of some library and/or its jar file\n");
