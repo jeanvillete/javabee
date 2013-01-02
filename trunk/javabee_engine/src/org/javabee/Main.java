@@ -42,9 +42,27 @@ public class Main {
 			return;
 		}
 		// delete
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-delete")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-d"))) {
+			String idJar = null;
+			if ((idJar = consoleParameter.getValue("-delete")) != null) {
+				ServiceFactory.getInstance().getConsole().delete(idJar);
+			} else if ((idJar = consoleParameter.getValue("-d")) != null) {
+				ServiceFactory.getInstance().getConsole().delete(idJar);
+			}
+			return;
+		}
 		// update
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-update")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-u"))) {
+			return;
+		}
 		// export
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-export"))) {
+			return;
+		}
 		// import
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-import"))) {
+			return;
+		}
 		// mount
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-mount"))) {
 			ServiceFactory.getInstance().getConsole().mount(consoleParameter);
