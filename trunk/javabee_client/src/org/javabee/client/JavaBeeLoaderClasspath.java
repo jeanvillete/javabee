@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.javabee.client.data;
+package org.javabee.client;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,21 +15,17 @@ import java.net.URLClassLoader;
  * It's based from: http://www.prshanmu.com/2010/01/dynamically-adding-a-jar-file-to-classpath.html
  *
  */
-public class JavaBeeLoaderClasspath {
+class JavaBeeLoaderClasspath {
 
 	@SuppressWarnings("rawtypes")
 	private static final Class[] parameters = new Class[]{URL.class};
 
-	public static void addFile(String folderAddress) throws IOException {
-		File f = new File(folderAddress);
-		addFile(f);
-	}
-
-	public static void addFile(File folder) throws IOException {
+	static void addFile(String folderAddress) throws IOException {
+		File folder = new File(folderAddress);
 		addURL(folder.toURI().toURL());
 	}
 
-	public static void addURL(URL urlFolder) throws IOException {
+	private static void addURL(URL urlFolder) throws IOException {
 		URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 		Class<URLClassLoader> sysclass = URLClassLoader.class;
 		try {

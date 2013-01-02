@@ -4,7 +4,6 @@
 package org.javabee.client;
 
 import org.javabee.client.config.JavaBeeConfigs;
-import org.javabee.client.data.JavaBeeLoaderClasspath;
 
 /**
  * @author Jean Villete
