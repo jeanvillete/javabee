@@ -25,6 +25,11 @@ public class JarTO extends LibraryTO {
 	private String 						filename;
 	private List<DependencyTO>			listDependencies;
 	
+	@Override
+	public String toString() {
+		return this.getId();
+	}
+	
 	// GETTERS AND SETTERS //
 	public String getName() {
 		return name;

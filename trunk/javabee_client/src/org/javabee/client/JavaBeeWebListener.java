@@ -40,6 +40,7 @@ public class JavaBeeWebListener implements ServletContextListener {
 			throw new IllegalArgumentException("The parameter " + JavaBeeConstants.WEB_PARAM_LIBRARIES + 
 					" is missing or is null, and this is mandatory!");
 		}
+		librariesParam = librariesParam.replace("\n", "").replace("\t", "").trim();
 		
 		String javabeeHome = null;
 		JavaBeeConfigs configs = null;

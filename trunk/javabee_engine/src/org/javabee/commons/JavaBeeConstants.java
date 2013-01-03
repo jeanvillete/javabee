@@ -6,5 +6,5 @@ public interface JavaBeeConstants {
 	String DATA_FILE_ADDRESS = "data/javabee.data.xml";
 	String LIBRARY_ROOT_ADDRESS = "../library";
 	String JAVABEE_TMP_DIR = "JavaBeeTmpDir";
-	
+	String BOOLEAN_CONSOLE_OPTIONS = "(true/1/yes/y or false/0/no/n)";
 }

@@ -1,6 +1,7 @@
 package org.javabee.service.impl;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -88,12 +89,37 @@ public class ConsoleBO implements Console {
 				showDependencies = showDependenciesParam.equals("true") || showDependenciesParam.equals("1") ||
 						showDependenciesParam.equals("yes") || showDependenciesParam.equals("y");
 			}
-			
+			List<JarTO> listJar = this.javabeeService.listJars();
+			String sortColumn = null;
+			if ((sortColumn = consoleParameter.getValue("-sort_column")) != null || (sortColumn = consoleParameter.getValue("-sc")) != null) {
+				if (sortColumn.contains("id")) {
+					Collections.sort(listJar, JarUtilComparator.getIdComparator());
+				}
+				if (sortColumn.contains("name")) {
+					Collections.sort(listJar, JarUtilComparator.getNameComparator());
+				}
+				if (sortColumn.contains("version")) {
+					Collections.sort(listJar, JarUtilComparator.getVersionComparator());
+				}
+				if (sortColumn.contains("filename")) {
+					Collections.sort(listJar, JarUtilComparator.getFileNameComparator());
+				}
+			}
 			// check show header
 			if (showHeader) {
-				this.printListWithHeader(this.javabeeService.listJars(), columns, showDependencies);
+				this.printListWithHeader(listJar, columns, showDependencies);
 			} else {
-				this.printListWithoutHeader(this.javabeeService.listJars(), columns, showDependencies);
+				this.printListWithoutHeader(listJar, columns, showDependencies);
+			}
+			
+			boolean showSize = true;
+			String showSizeParam = null;
+			if ((showSizeParam = consoleParameter.getValue("-show_size")) != null || (showSizeParam = consoleParameter.getValue("-sz")) != null) {
+				showSize = showSizeParam.equals("true") || showSizeParam.equals("1") ||
+						showSizeParam.equals("yes") || showSizeParam.equals("y");
+			}
+			if (showSize) {
+				System.out.print("\nsize: " + listJar.size() + "\n");
 			}
 		} catch (Exception e) {
 			System.out.println("1[" + e.getMessage() + "]");
@@ -167,7 +193,8 @@ public class ConsoleBO implements Console {
 			jar.setFilename(targetFile.getName());
 			jar.setName(name);
 			jar.setVersion(version);
-			String dependencyInput = getDialogueResponse("Do you want declare some known dependency for this library? (y/n)");
+			String dependencyInput = getDialogueResponse("Do you want declare SOME known dependency for this library?" +
+					JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS);
 			while (GeneralsHelper.isStringOk(dependencyInput) && dependencyInput.equals("y")) {
 				String dependencyId = getDialogueResponse("dependency id");
 				if (!javabee.getJars().containsKey(dependencyId)) {
@@ -175,7 +202,8 @@ public class ConsoleBO implements Console {
 				} else {
 					jar.getListDependencies().add(new DependencyTO(dependencyId));
 				}
-				dependencyInput = getDialogueResponse("Do you want declare ANOTHER known dependency for this library? (y/n)");
+				dependencyInput = getDialogueResponse("Do you want declare ANOTHER known dependency for this library?" +
+						JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS);
 			}
 			javabee.getJars().put(jar.getId(), jar);
 			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
@@ -222,20 +250,25 @@ public class ConsoleBO implements Console {
 	public void printHelp() {
 		StringBuffer helpMessage = new StringBuffer();
 		helpMessage.append("command javabee -help\n");
-		helpMessage.append("  -help[-h]                      show the possible actions with its needed parameters\n");
-		helpMessage.append("  -version[-v]                   show the version of the current JavaBee\n");
-		helpMessage.append("  -list[-l]                      show all libraries actually stored\n");
-		helpMessage.append("    -columns[-c]                   list with select columns (id, name, version, filename)\n");
-		helpMessage.append("    -show_header[-sh]              list with or without header (true/1 or false/0)\n");
-		helpMessage.append("    -show_dependencies[-sd]        list with or without dependencies (true/1 or false/0)\n");
-		helpMessage.append("  -add(wizard prompt)            command used to add a new library to JavaBee manage\n");
-		helpMessage.append("  -delete[-d] \"jar id\"           command to delete a library from the current JavaBee\n");
-		helpMessage.append("  -update[-u] \"jar id\"           command to update info of some library and/or its jar file\n");
-		helpMessage.append("  -export \"target file address\"  command used to export the current JavaBee's state\n");
-		helpMessage.append("  -import \"source file address\"  command used to import a JavaBee's state\n");
-		helpMessage.append("  -mount                         command used build the directory with desired libraries\n");
-		helpMessage.append("    -libraries[-lib]           (mandatory)set with all id libraries desired\n");
-		helpMessage.append("    -manage_dependencies[-md]  (optional, default=false)inject or not dependencies\n");
+		helpMessage.append(" -help[-h]                    show possible actions with its needed parameters\n");
+		helpMessage.append(" -version[-v]                 show version of the current JavaBee\n");
+		helpMessage.append(" -add(wizard prompt)          add a new library to JavaBee manage\n");
+		helpMessage.append(" -delete[-d] \"jar id\"         delete a library from the current JavaBee\n");
+		helpMessage.append(" -update[-u] \"jar id\"         update info about some library\n");
+		helpMessage.append(" -export \"target file\"        export the current JavaBee's state\n");
+		helpMessage.append(" -import \"source file\"        import a JavaBee's state\n");
+		helpMessage.append(" -list[-l]                    show the current stored libraries\n");
+		helpMessage.append("   ( optional )\n");
+		helpMessage.append("   -columns[-c]               choice select columns(id,name,version,filename)\n");
+		helpMessage.append("   -show_header[-sh]          list header"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append("   -show_dependencies[-sd]    list dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append("   -sort_column[-sc]          order by column ASC(id,name,version,filename)\n");
+		helpMessage.append("   -sort_size[-sz]            show size at the end"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append(" -mount                       mount a directory with all desired libraries\n");
+		helpMessage.append("   ( mandatory )\n");
+		helpMessage.append("   -libraries[-lib]           a set with all desired id libraries\n");
+		helpMessage.append("   ( optional )\n");
+		helpMessage.append("   -manage_dependencies[-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
 		System.out.print(helpMessage.toString());
 	}
 	
