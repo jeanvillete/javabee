@@ -24,6 +24,9 @@ public class JavaBeeClient {
 		try {
 			String result = this.executable.execute();
 			result = result.trim().replace("\n", "");
+			
+			System.out.println("result: " + result);
+			
 			if (result.startsWith("0")) { // success
 				JavaBeeLoaderClasspath.addFile(result.split(",")[1]);
 			} else if (result.startsWith("1")) { // error

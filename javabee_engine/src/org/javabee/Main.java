@@ -19,7 +19,7 @@ public class Main {
 	public static void main(String[] args) {
 		ConsoleParameters consoleParameter = ConsoleParameters.getInstance(args);
 		if (!GeneralsHelper.isStringOk(consoleParameter.getValue("-from_client")) && !GeneralsHelper.isStringOk(consoleParameter.getValue("-fc"))) {
-			System.out.println("JavaBee Org Library Manager Engine");
+			System.out.println("JavaBee Org - Library Manager - Engine");
 		}
 		// help
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-help")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-h"))) {
