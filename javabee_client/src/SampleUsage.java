@@ -16,7 +16,7 @@ public class SampleUsage {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		JavaBeeConfigs configs = new JavaBeeConfigsEnvironmentVariable("JAVABEE_HOME", "dbmoney_test_environment");
+		JavaBeeConfigs configs = new JavaBeeConfigsEnvironmentVariable("JAVABEE_HOME", "xstream_1.4.1");
 		JavaBeeClient javabeeClient = new JavaBeeClient(configs);
 		javabeeClient.loadClasspath();
 	}
