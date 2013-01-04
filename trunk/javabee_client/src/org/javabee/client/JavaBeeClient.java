@@ -3,6 +3,8 @@
  */
 package org.javabee.client;
 
+import java.io.File;
+
 import org.javabee.client.config.JavaBeeConfigs;
 
 /**
@@ -29,6 +31,7 @@ public class JavaBeeClient {
 			
 			if (result.startsWith("0")) { // success
 				JavaBeeLoaderClasspath.addFile(result.split(",")[1]);
+				new JarClassLoader(new File(result.split(",")[1]));
 			} else if (result.startsWith("1")) { // error
 				throw new RuntimeException(result.split(",")[1]);
 			} else throw new IllegalStateException("no valid value result was found");
