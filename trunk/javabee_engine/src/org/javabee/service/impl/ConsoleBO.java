@@ -8,6 +8,7 @@ import java.util.Scanner;
 import org.apache.commons.io.FileUtils;
 import org.com.tatu.helper.GeneralsHelper;
 import org.com.tatu.helper.parameter.ConsoleParameters;
+import org.com.tatu.helper.zip.UnZipHelper;
 import org.javabee.commons.JavaBeeConstants;
 import org.javabee.commons.JavaBeeUtils;
 import org.javabee.entities.DependencyTO;
@@ -21,20 +22,27 @@ public class ConsoleBO implements Console {
 	private JavaBee				javabeeService = new JavaBeeBO();
 	
 	@Override
-	public void mount(ConsoleParameters consoleParameter) {
-		boolean fromClient = GeneralsHelper.isStringOk(consoleParameter.getValue("-from_client")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-fc"));
+	public void libraries(ConsoleParameters consoleParameter) {
 		try {
-			if (!fromClient) {
-				System.out.print("command javabee -mount\n\n");
+			System.out.print("command javabee -libraries\n\n");
+			
+			// ids parameter
+			String libraries = null;
+			if (!GeneralsHelper.isStringOk( libraries = consoleParameter.getValue("-ids") )) {
+				throw new IllegalArgumentException("Parameter not -ids not found, and it's mandatory to -libraries command");
 			}
-			// libraries parameter
-			String libraries = consoleParameter.getValue("-libraries");
-			if (!GeneralsHelper.isStringOk(libraries)) {
-				libraries = consoleParameter.getValue("-lib");
-				if (!GeneralsHelper.isStringOk(libraries)) {
-					throw new IllegalArgumentException("Parameter not -libraries or -lib not found, and it's mandatory to -mount command");
-				}
+			
+			// target directory parameter
+			String targetDirectoryParam = null;
+			if (!GeneralsHelper.isStringOk( targetDirectoryParam = consoleParameter.getValue("-target_directory") ) 
+					&& !GeneralsHelper.isStringOk( targetDirectoryParam = consoleParameter.getValue("-td") )) {
+				throw new IllegalArgumentException("Parameter not -ids not found, and it's mandatory to -libraries command");
 			}
+			File targetDirectory = new File(targetDirectoryParam);
+			if (!targetDirectory.exists() || !targetDirectory.isDirectory()) {
+				throw new IllegalStateException("The target directory don't exist or is not a directory: " + targetDirectoryParam);
+			}
+			
 			// managed dependencies parameter
 			String manageDependencies = consoleParameter.getValue("-manage_dependencies");
 			Boolean injectDependencies=null;
@@ -49,22 +57,33 @@ public class ConsoleBO implements Console {
 			// check if the libraries exist
 			
 			// create temporary directory
-			File tmpDir = JavaBeeUtils.createTmpDir(JavaBeeConstants.JAVABEE_TMP_DIR);
 			for (JarTO jar : this.javabeeService.listToMount(libraries, injectDependencies)) {
 				File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
-				FileUtils.copyFileToDirectory(fileInsideLibrary, tmpDir);
+				FileUtils.copyFileToDirectory(fileInsideLibrary, targetDirectory);
 			}
-			if (fromClient) {
-				System.out.print("0,"+tmpDir.getCanonicalPath());
-			} else {
-				System.out.print("0[\""+ tmpDir.getCanonicalPath() +"\"]");
-			}
+			System.out.print("Command executed successfully, libraries copied to: " + targetDirectoryParam);
 		} catch (Exception e) {
-			if (fromClient) {
-				System.out.print("1," + e.getMessage());
-			} else {
-				System.out.print("1[\"" + e.getMessage() + "\"]");
+			System.out.print("Error: " + e.getMessage());
+			return;
+		}
+	}
+
+	@Override
+	public void mount(ConsoleParameters consoleParameter) {
+		try {
+			System.out.print("command javabee -mount\n\n");
+			
+			String fileSourceParam = null;
+			if (!GeneralsHelper.isStringOk( fileSourceParam = consoleParameter.getValue("-file") )) {
+				throw new IllegalArgumentException("Parameter -file not found, and it's mandatory to -mount command");
 			}
+			File fileSource = new File(fileSourceParam);
+			String currentDirectoryParam = consoleParameter.getValue("-current_directory", true);
+			UnZipHelper unzipping = new UnZipHelper(fileSource, new File(currentDirectoryParam));
+			unzipping.decompress();
+			
+		} catch (Exception e) {
+			System.out.print("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -264,11 +283,15 @@ public class ConsoleBO implements Console {
 		helpMessage.append("   -show_dependencies[-sd]    list dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
 		helpMessage.append("   -sort_column[-sc]          order by column ASC(id,name,version,filename)\n");
 		helpMessage.append("   -sort_size[-sz]            show size at the end"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append(" -libraries                   mount a directory with all desired libraries\n");
+		helpMessage.append("   ( mandatory )\n");
+		helpMessage.append("   -ids                       a set with all desired id libraries\n");
+		helpMessage.append("   -target_directory         the target diretory to copy the desired libraries\n");
+		helpMessage.append("   ( optional )\n");
+		helpMessage.append("   -manage_dependencies[-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
 		helpMessage.append(" -mount                       mount a directory with all desired libraries\n");
 		helpMessage.append("   ( mandatory )\n");
 		helpMessage.append("   -libraries[-lib]           a set with all desired id libraries\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -manage_dependencies[-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
 		System.out.print(helpMessage.toString());
 	}
 	

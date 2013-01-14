@@ -16,6 +16,7 @@ public interface Console {
 	void list(ConsoleParameters consoleParameter);
 	void add();
 	void delete(String idJar);
+	void libraries(ConsoleParameters consoleParameter);
 	void mount(ConsoleParameters consoleParameter);
 
 }

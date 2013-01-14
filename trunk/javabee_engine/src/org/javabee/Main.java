@@ -18,9 +18,8 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		ConsoleParameters consoleParameter = ConsoleParameters.getInstance(args);
-		if (!GeneralsHelper.isStringOk(consoleParameter.getValue("-from_client")) && !GeneralsHelper.isStringOk(consoleParameter.getValue("-fc"))) {
-			System.out.println("JavaBee Org - Library Manager - Engine");
-		}
+		System.out.println("JavaBee Org - Library Manager - Engine");
+		
 		// help
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-help")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-h"))) {
 			ServiceFactory.getInstance().getConsole().printHelp();
@@ -61,6 +60,11 @@ public class Main {
 		}
 		// import
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-import"))) {
+			return;
+		}
+		// libraries
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-libraries"))) {
+			ServiceFactory.getInstance().getConsole().libraries(consoleParameter);
 			return;
 		}
 		// mount
