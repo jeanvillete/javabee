@@ -6,7 +6,8 @@ rem ---------------------------------------------------------------------------
 if "%JAVA_HOME%" == "" goto jvmNotDefined
 :gotExecute
 set CURRENT_DIR=%~dp0
-call "%JAVA_HOME%\bin\java" -jar "%CURRENT_DIR%javabee_engine.jar" %*
+set PARAMETERS=%* -current_directory " %CURRENT_DIR% "
+call "%JAVA_HOME%\bin\java" -jar "%CURRENT_DIR%javabee_engine.jar" %PARAMETERS%
 goto end
 :jvmNotDefined
 echo JAVA_HOME not defined
