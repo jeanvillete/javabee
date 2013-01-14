@@ -32,9 +32,26 @@
 		</copy>
 		
 		<!-- genereting javabee jar file -->
-		<zip destfile="${javabee-jar}">
-		    <zipfileset dir="${javabee-home}/bin" />
-		</zip>
+		<!-- create a property containing all .jar files, prefix lib/, and seperated with a space -->
+		<pathconvert property="libs.project" pathsep=" ">
+			<mapper>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*" to="dependencies/*" />
+				</chainedmapper>
+			</mapper>
+			<path>
+				<fileset dir="${javabee-home-temp-dependencies}">
+					<include name="**/*.jar" />
+				</fileset>
+			</path>
+		</pathconvert>
+		<jar jarfile="${javabee-jar}" basedir="${javabee-home}/bin">
+			<manifest>
+				<attribute name="Main-Class" value="org.javabee.Main" />
+				<attribute name="Class-Path" value="${libs.project}" />
+			</manifest>
+		</jar>
 
 		<zip destfile="${javabee-zip}">
 		    <zipfileset dir="${javabee-home-temp}" />

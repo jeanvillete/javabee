@@ -1,11 +1,14 @@
 package org.javabee.service.impl;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
+import org.com.tatu.helper.FileHelper;
 import org.com.tatu.helper.GeneralsHelper;
 import org.com.tatu.helper.parameter.ConsoleParameters;
 import org.com.tatu.helper.zip.UnZipHelper;
@@ -16,6 +19,12 @@ import org.javabee.entities.JarTO;
 import org.javabee.entities.JavaBeeTO;
 import org.javabee.service.Console;
 import org.javabee.service.JavaBee;
+import org.simplestructruedata.data.SSDContextManager;
+import org.simplestructruedata.data.SSDContextManager.SSDRootObject;
+import org.simplestructruedata.entities.SSDObject;
+import org.simplestructruedata.entities.SSDObjectArray;
+import org.simplestructruedata.entities.SSDObjectLeaf;
+import org.simplestructruedata.entities.SSDObjectNode;
 
 public class ConsoleBO implements Console {
 
@@ -78,10 +87,36 @@ public class ConsoleBO implements Console {
 				throw new IllegalArgumentException("Parameter -file not found, and it's mandatory to -mount command");
 			}
 			File fileSource = new File(fileSourceParam);
-			String currentDirectoryParam = consoleParameter.getValue("-current_directory", true);
-			UnZipHelper unzipping = new UnZipHelper(fileSource, new File(currentDirectoryParam));
+			File tmpDir = JavaBeeUtils.createTmpDir(JavaBeeConstants.JAVABEE_TMP_DIR);
+			
+			UnZipHelper unzipping = new UnZipHelper(fileSource, tmpDir);
 			unzipping.decompress();
 			
+			File javabeeDescriptor = new File(tmpDir, JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR);
+			if (!javabeeDescriptor.exists() || !javabeeDescriptor.isFile()) {
+				throw new IllegalStateException("The file " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " descriptor has not been found.");
+			}
+			
+			SSDContextManager ssdContext = SSDContextManager.build(javabeeDescriptor);
+			SSDRootObject root = ssdContext.getRootObject();
+			for (SSDObject ssdObject : root.getArray("manage-libraries").getElements()) {
+				SSDObjectNode node = (SSDObjectNode) ssdObject;
+				String paramTargetDirectory = node.getLeaf("target-directory").getValue();
+				File targetDirectory = new File(tmpDir, paramTargetDirectory);
+				if (!targetDirectory.exists() || !targetDirectory.isDirectory()) {
+					throw new IllegalStateException("The target directory " + paramTargetDirectory + " declared at " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " don't exist");
+				}
+
+				// preparing remove
+				List<String> listRemoving = new ArrayList<String>();
+				for (SSDObject ssdObjectRemoving : node.getArray("selective-removing").getElements()) {
+					SSDObjectLeaf removing = (SSDObjectLeaf) ssdObjectRemoving;
+					listRemoving.add(removing.getValue());
+				}
+				FileHelper fh = new FileHelper(targetDirectory.getCanonicalPath());
+				fh.delete(listRemoving.toArray(new String[]{}));
+			}
+			tmpDir.delete();
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
 			return;
@@ -299,5 +334,10 @@ public class ConsoleBO implements Console {
 		System.out.print(mensage + ": ");
 		return new Scanner(System.in).next().trim();
 	}
-	
+
+	private File getCurrentDirectory(ConsoleParameters consoleParameters) {
+		String currentDirectoryParam = consoleParameters.getValue(JavaBeeConstants.CURRENT_DIRECTORY_PARAM, true);
+		currentDirectoryParam = currentDirectoryParam.trim();
+		return new File(currentDirectoryParam);
+	}
 }

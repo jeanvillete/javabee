@@ -10,14 +10,15 @@ import org.javabee.entities.JarTO;
 public class JavaBeeUtils {
 	
 	/**
-	* Method to create a Temporary Directory to decompress the OCR Data Training.
+	* Method to create a Temporary Directory.
 	* @return
 	*/
 	public static final File createTmpDir(String identifierTmpDir) {
 		String tmpDirPath = System.getProperty("java.io.tmpdir");
-		File ocrTmpDir = new File(tmpDirPath + identifierTmpDir + Long.toString(System.nanoTime()));
-		ocrTmpDir.mkdir();
-		return ocrTmpDir;
+		File tmpDir = new File(tmpDirPath + identifierTmpDir + Long.toString(System.nanoTime()));
+		tmpDir.mkdir();
+		tmpDir.deleteOnExit();
+		return tmpDir;
 	}
 
 	/**
