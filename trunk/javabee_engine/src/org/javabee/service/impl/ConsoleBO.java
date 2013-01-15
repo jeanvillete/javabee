@@ -1,6 +1,7 @@
 package org.javabee.service.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.javabee.service.JavaBee;
 import org.simplestructruedata.data.SSDContextManager;
 import org.simplestructruedata.data.SSDContextManager.SSDRootObject;
 import org.simplestructruedata.entities.SSDObject;
+import org.simplestructruedata.entities.SSDObjectArray;
 import org.simplestructruedata.entities.SSDObjectLeaf;
 import org.simplestructruedata.entities.SSDObjectNode;
 
@@ -46,33 +48,38 @@ public class ConsoleBO implements Console {
 					&& !GeneralsHelper.isStringOk( targetDirectoryParam = consoleParameter.getValue("-td") )) {
 				throw new IllegalArgumentException("Parameter not -ids not found, and it's mandatory to -libraries command");
 			}
-			File targetDirectory = new File(targetDirectoryParam);
-			if (!targetDirectory.exists() || !targetDirectory.isDirectory()) {
-				throw new IllegalStateException("The target directory don't exist or is not a directory: " + targetDirectoryParam);
-			}
 			
 			// managed dependencies parameter
 			String manageDependencies = consoleParameter.getValue("-manage_dependencies");
-			Boolean injectDependencies=null;
 			if (!GeneralsHelper.isStringOk(manageDependencies)) {
 				manageDependencies = consoleParameter.getValue("-md");
 				if (!GeneralsHelper.isStringOk(manageDependencies)) {
 					manageDependencies = "false";
 				}
-				injectDependencies = manageDependencies.equals("true") || manageDependencies.equals("1") ||
-						manageDependencies.equals("yes") || manageDependencies.equals("y");
 			}
-			// check if the libraries exist
 			
-			// create temporary directory
-			for (JarTO jar : this.javabeeService.listToMount(libraries, injectDependencies)) {
-				File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
-				FileUtils.copyFileToDirectory(fileInsideLibrary, targetDirectory);
-			}
+			this.libraries(libraries, targetDirectoryParam, manageDependencies);
+			
 			System.out.print("Command executed successfully, libraries copied to: " + targetDirectoryParam);
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
 			return;
+		}
+	}
+	
+	private void libraries(String libraries, String targetDirectoryParam, String manageDependencies) throws IOException {
+		File targetDirectory = new File(targetDirectoryParam);
+		if (!targetDirectory.exists() || !targetDirectory.isDirectory()) {
+			throw new IllegalStateException("The target directory don't exist or is not a directory: " + targetDirectoryParam);
+		}
+		
+		// decide inject dependencies
+		Boolean injectDependencies = manageDependencies.equals("true") || manageDependencies.equals("1") ||
+				manageDependencies.equals("yes") || manageDependencies.equals("y");
+		
+		for (JarTO jar : this.javabeeService.listToMount(libraries, injectDependencies)) {
+			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
+			FileUtils.copyFileToDirectory(fileInsideLibrary, targetDirectory);
 		}
 	}
 
@@ -124,6 +131,63 @@ public class ConsoleBO implements Console {
 			tmpDir.delete();
 			
 			System.out.print("Command executed successfully, mount completed: " + jbf.getCanonicalPath());
+		} catch (Exception e) {
+			System.out.print("Error: " + e.getMessage());
+			return;
+		}
+	}
+	
+	@Override
+	public void unmount(ConsoleParameters consoleParameter) {
+		try {
+			System.out.print("command javabee -unmount\n\n");
+			
+			// source file
+			String jbfFileSourceParam = null;
+			if (!GeneralsHelper.isStringOk( jbfFileSourceParam = consoleParameter.getValue("-file") )) {
+				throw new IllegalArgumentException("Parameter -file not found, and it's mandatory to -unmount command");
+			}
+			File jbfSourceFile = new File(jbfFileSourceParam);
+			
+			// target directory
+			String targetDirectoryParam = consoleParameter.getValue("-to");
+			File targetDirectory = GeneralsHelper.isStringOk(targetDirectoryParam) ? new File(targetDirectoryParam) : this.getCurrentDirectory(consoleParameter);
+			
+			File tmpDir = JavaBeeUtils.createTmpDir(JavaBeeConstants.JAVABEE_TMP_DIR);
+			
+			UnZipHelper unzipping = new UnZipHelper(jbfSourceFile, tmpDir);
+			unzipping.decompress();
+			
+			File javabeeDescriptor = new File(tmpDir, JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR);
+			if (!javabeeDescriptor.exists() || !javabeeDescriptor.isFile()) {
+				throw new IllegalStateException("The file " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " descriptor has not been found.");
+			}
+			
+			SSDContextManager ssdContext = SSDContextManager.build(javabeeDescriptor);
+			SSDRootObject root = ssdContext.getRootObject();
+			for (SSDObject ssdObject : root.getArray("manage-libraries").getElements()) {
+				SSDObjectNode manageLibraries = (SSDObjectNode) ssdObject;
+				
+				SSDObjectArray setId = manageLibraries.getArray("set-id");
+				StringBuffer stringIds = new StringBuffer();
+				for (int i = 0; i < setId.getSize() ; i++) {
+					stringIds.append(setId.getLeaf(i).getValue());
+					if ((i+1) < setId.getSize()) {
+						stringIds.append(", ");
+					}
+				}
+				File libTargetDirectory = new File(tmpDir, manageLibraries.getLeaf("target-directory").getValue());
+				this.libraries(stringIds.toString(), libTargetDirectory.getCanonicalPath(), manageLibraries.getLeaf("inject-dependencies").getValue());
+			}
+			
+			// zipping the prepared tmp directory
+			File jbfOutFile = new File(targetDirectory, root.getLeaf("extract-name").getValue());
+			ZipHelper zipping = new ZipHelper(tmpDir, jbfOutFile);
+			zipping.compress();
+			
+			tmpDir.delete();
+			
+			System.out.print("Command executed successfully, unmount completed: " + jbfOutFile.getCanonicalPath());
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
 			return;
@@ -328,12 +392,17 @@ public class ConsoleBO implements Console {
 		helpMessage.append(" -libraries                   mount a directory with all desired libraries\n");
 		helpMessage.append("   ( mandatory )\n");
 		helpMessage.append("   -ids                       a set with all desired id libraries\n");
-		helpMessage.append("   -target_directory         the target diretory to copy the desired libraries\n");
+		helpMessage.append("   -target_directory          the target diretory to copy the desired libraries\n");
 		helpMessage.append("   ( optional )\n");
 		helpMessage.append("   -manage_dependencies[-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
-		helpMessage.append(" -mount                       mount a directory with all desired libraries\n");
+		helpMessage.append(" -mount                       mount a file .jbf (JavaBee File) from a completed application file\n");
 		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -libraries[-lib]           a set with all desired id libraries\n");
+		helpMessage.append("   -file                      the current completed and compressed file address\n");
+		helpMessage.append(" -unmount                     return the .jbf (JavaBee File) to application's properly state\n");
+		helpMessage.append("   ( mandatory )\n");
+		helpMessage.append("   -file                      a .jbf valid file address\n");
+		helpMessage.append("   ( optional )\n");
+		helpMessage.append("   -to                        the target directory to application compressed file\n");
 		System.out.print(helpMessage.toString());
 	}
 	

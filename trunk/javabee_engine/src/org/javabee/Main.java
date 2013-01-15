@@ -72,6 +72,11 @@ public class Main {
 			ServiceFactory.getInstance().getConsole().mount(consoleParameter);
 			return;
 		}
+		// unmount
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-unmount"))) {
+			ServiceFactory.getInstance().getConsole().unmount(consoleParameter);
+			return;
+		}
 		ServiceFactory.getInstance().getConsole().printHelp();
 	}
 }
