@@ -2,7 +2,6 @@ package org.javabee.service.impl;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
@@ -12,6 +11,7 @@ import org.com.tatu.helper.FileHelper;
 import org.com.tatu.helper.GeneralsHelper;
 import org.com.tatu.helper.parameter.ConsoleParameters;
 import org.com.tatu.helper.zip.UnZipHelper;
+import org.com.tatu.helper.zip.ZipHelper;
 import org.javabee.commons.JavaBeeConstants;
 import org.javabee.commons.JavaBeeUtils;
 import org.javabee.entities.DependencyTO;
@@ -22,7 +22,6 @@ import org.javabee.service.JavaBee;
 import org.simplestructruedata.data.SSDContextManager;
 import org.simplestructruedata.data.SSDContextManager.SSDRootObject;
 import org.simplestructruedata.entities.SSDObject;
-import org.simplestructruedata.entities.SSDObjectArray;
 import org.simplestructruedata.entities.SSDObjectLeaf;
 import org.simplestructruedata.entities.SSDObjectNode;
 
@@ -116,7 +115,15 @@ public class ConsoleBO implements Console {
 				FileHelper fh = new FileHelper(targetDirectory.getCanonicalPath());
 				fh.delete(listRemoving.toArray(new String[]{}));
 			}
+			
+			// zipping the prepared tmp directory
+			File jbf = new File(this.getCurrentDirectory(consoleParameter), FileHelper.removeExtension(fileSource.getName()) + JavaBeeConstants.JAVABEE_FILE_EXTENSION);
+			ZipHelper zipping = new ZipHelper(tmpDir, jbf);
+			zipping.compress();
+			
 			tmpDir.delete();
+			
+			System.out.print("Command executed successfully, mount completed: " + jbf.getCanonicalPath());
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
 			return;

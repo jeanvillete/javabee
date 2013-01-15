@@ -10,4 +10,5 @@ public interface JavaBeeConstants {
 	
 	String CURRENT_DIRECTORY_PARAM = "-current_directory";
 	String JAVABEE_FILE_DESCRIPTOR = "javabee.desc.ssd";
+	String JAVABEE_FILE_EXTENSION = ".jbf";
 }
