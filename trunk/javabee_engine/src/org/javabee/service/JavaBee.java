@@ -18,7 +18,7 @@ public interface JavaBee {
 
 	List<JarTO> listJars() throws IOException;
 	JavaBeeTO getCurrentState() throws IOException;
-	void updateState() throws FileNotFoundException, IOException;
+	void updateState(JavaBeeTO javabeeTo) throws FileNotFoundException, IOException;
 	List<JarTO> listToMount(String ids, Boolean injectDependencies) throws IOException;
 	
 }

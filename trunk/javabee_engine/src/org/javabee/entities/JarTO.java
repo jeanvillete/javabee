@@ -30,6 +30,10 @@ public class JarTO extends LibraryTO {
 		return this.getId();
 	}
 	
+	public void addDependency(DependencyTO dependency) {
+		this.getListDependencies().add(dependency);
+	}
+	
 	// GETTERS AND SETTERS //
 	public String getName() {
 		return name;
