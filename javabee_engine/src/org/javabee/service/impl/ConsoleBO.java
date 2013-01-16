@@ -349,7 +349,7 @@ public class ConsoleBO implements Console {
 			javabee.getJars().put(jar.getId(), jar);
 			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
 			FileUtils.copyFile(targetFile, fileInsideLibrary);
-			this.javabeeService.updateState();
+			this.javabeeService.updateState(javabee);
 			System.out.print("Command executed successfully, add completed: " + jar.getId());
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
@@ -373,7 +373,7 @@ public class ConsoleBO implements Console {
 				if (!(jarNameFolder.list().length > 0)) {
 					jarNameFolder.delete();
 				}
-				this.javabeeService.updateState();
+				this.javabeeService.updateState(javabee);
 				System.out.println("Jar removed successfully! Jar Id: " + idJar);
 			} else {
 				throw new IllegalArgumentException("Command failed! Jar Id: " + idJar + " not found.");

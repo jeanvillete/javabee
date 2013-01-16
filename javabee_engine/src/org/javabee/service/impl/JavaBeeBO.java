@@ -9,10 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.javabee.data.xstream.XStreamFactory;
 import org.javabee.entities.DependencyTO;
 import org.javabee.entities.JarTO;
 import org.javabee.entities.JavaBeeTO;
+import org.javabee.persistence.JavaBeePO;
 import org.javabee.service.JavaBee;
 
 /**
@@ -23,17 +23,17 @@ public class JavaBeeBO implements JavaBee {
 
 	@Override
 	public List<JarTO> listJars() throws IOException {
-		return new ArrayList<JarTO>(XStreamFactory.getInstance().getCurrentState().getJars().values());
+		return new JavaBeePO().listJars();
 	}
 
 	@Override
 	public JavaBeeTO getCurrentState() throws IOException {
-		return XStreamFactory.getInstance().getCurrentState();
+		return new JavaBeePO().getCurrentState();
 	}
 
 	@Override
-	public void updateState() throws IOException {
-		XStreamFactory.getInstance().persistData();
+	public void updateState(JavaBeeTO javabeeTo) throws IOException {
+		new JavaBeePO().updateState(javabeeTo);
 	}
 
 	@Override

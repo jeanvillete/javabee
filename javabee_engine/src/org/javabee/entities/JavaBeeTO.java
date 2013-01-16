@@ -21,6 +21,10 @@ public class JavaBeeTO extends TO {
 	private String 						version;
 	private Map<String, JarTO>			jars; // key=jarto.id, value=jarto
 
+	public void addJar(JarTO jar) {
+		this.getJars().put(jar.getId(), jar);
+	}
+	
 	// GETTERS AND SETTERS //
 	public String getVersion() {
 		return version;
