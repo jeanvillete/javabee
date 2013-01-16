@@ -13,7 +13,7 @@ public class JarUtilComparator {
 				if (another == null || another.getId() == null) {
 					return -1;
 				}
-				return current.getId().compareTo(another.getId());
+				return current.getId().toLowerCase().compareTo(another.getId().toLowerCase());
 			}
 		};
 	}
@@ -25,7 +25,7 @@ public class JarUtilComparator {
 				if (another == null || another.getName() == null) {
 					return -1;
 				}
-				return current.getName().compareTo(another.getName());
+				return current.getName().toLowerCase().compareTo(another.getName().toLowerCase());
 			}
 		};
 	}
@@ -37,7 +37,7 @@ public class JarUtilComparator {
 				if (another == null || another.getVersion() == null) {
 					return -1;
 				}
-				return current.getVersion().compareTo(another.getVersion());
+				return current.getVersion().toLowerCase().compareTo(another.getVersion().toLowerCase());
 			}
 		};
 	}
@@ -49,7 +49,7 @@ public class JarUtilComparator {
 				if (another == null || another.getFilename() == null) {
 					return -1;
 				}
-				return current.getFilename().compareTo(another.getFilename());
+				return current.getFilename().toLowerCase().compareTo(another.getFilename().toLowerCase());
 			}
 		};
 	}
