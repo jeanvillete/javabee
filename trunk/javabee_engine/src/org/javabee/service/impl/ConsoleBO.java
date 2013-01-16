@@ -74,8 +74,7 @@ public class ConsoleBO implements Console {
 		}
 		
 		// decide inject dependencies
-		Boolean injectDependencies = manageDependencies.equals("true") || manageDependencies.equals("1") ||
-				manageDependencies.equals("yes") || manageDependencies.equals("y");
+		Boolean injectDependencies = GeneralsHelper.isBooleanTrue(manageDependencies);
 		
 		for (JarTO jar : this.javabeeService.listToMount(libraries, injectDependencies)) {
 			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
@@ -201,8 +200,7 @@ public class ConsoleBO implements Console {
 			boolean showHeader = true;
 			String showHeaderParam = null;
 			if ((showHeaderParam = consoleParameter.getValue("-show_header")) != null || (showHeaderParam = consoleParameter.getValue("-sh")) != null) {
-				showHeader = showHeaderParam.equals("true") || showHeaderParam.equals("1") ||
-						showHeaderParam.equals("yes") || showHeaderParam.equals("y");
+				showHeader = GeneralsHelper.isBooleanTrue(showHeaderParam);
 			}
 			String columns = null;
 			if ((columns = consoleParameter.getValue("-columns")) == null) {
@@ -211,8 +209,7 @@ public class ConsoleBO implements Console {
 			boolean showDependencies = true;
 			String showDependenciesParam = null;
 			if ((showDependenciesParam = consoleParameter.getValue("-show_dependencies")) != null || (showDependenciesParam = consoleParameter.getValue("-sd")) != null) {
-				showDependencies = showDependenciesParam.equals("true") || showDependenciesParam.equals("1") ||
-						showDependenciesParam.equals("yes") || showDependenciesParam.equals("y");
+				showDependencies = GeneralsHelper.isBooleanTrue(showDependenciesParam);
 			}
 			List<JarTO> listJar = this.javabeeService.listJars();
 			String sortColumn = null;
@@ -240,14 +237,13 @@ public class ConsoleBO implements Console {
 			boolean showSize = true;
 			String showSizeParam = null;
 			if ((showSizeParam = consoleParameter.getValue("-show_size")) != null || (showSizeParam = consoleParameter.getValue("-sz")) != null) {
-				showSize = showSizeParam.equals("true") || showSizeParam.equals("1") ||
-						showSizeParam.equals("yes") || showSizeParam.equals("y");
+				showSize = GeneralsHelper.isBooleanTrue(showSizeParam);
 			}
 			if (showSize) {
 				System.out.print("\nsize: " + listJar.size() + "\n");
 			}
 		} catch (Exception e) {
-			System.out.println("1[" + e.getMessage() + "]");
+			System.out.print("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -303,24 +299,44 @@ public class ConsoleBO implements Console {
 	}
 	
 	@Override
-	public void add() {
+	public void add(ConsoleParameters consoleParameter) {
 		try {
+			System.out.print("command javabee -add\n\n");
+			
 			JavaBeeTO javabee = this.javabeeService.getCurrentState();
-			String currentFileAddress = getDialogueResponse("Library File (full) Address");
-			File targetFile = new File(currentFileAddress);
+			
+			// file param
+			String targetFileParam = null;
+			if (!GeneralsHelper.isStringOk( targetFileParam = consoleParameter.getValue("-file") )) {
+				throw new IllegalArgumentException("Parameter -file not found, and it's mandatory to -add command");
+			}
+			File targetFile = new File(targetFileParam);
 			if (!targetFile.exists() || !targetFile.isFile()) {
-				System.out.println("File unaccessable: " + currentFileAddress);
+				System.out.println("File unaccessable: " + targetFileParam);
 				return;
 			}
-			String name = getDialogueResponse("library NAME");
-			String version = getDialogueResponse("libray VERSION");
+			
+			// name param
+			String name = null;
+			if (!GeneralsHelper.isStringOk( name = consoleParameter.getValue("-name") )) {
+				throw new IllegalArgumentException("Parameter -name not found, and it's mandatory to -add command");
+			}
+			
+			// version param
+			String version = null;
+			if (!GeneralsHelper.isStringOk( version = consoleParameter.getValue("-version") )) {
+				throw new IllegalArgumentException("Parameter -version not found, and it's mandatory to -add command");
+			}
+			
 			JarTO jar = new JarTO(name + "_" + version);
 			jar.setFilename(targetFile.getName());
 			jar.setName(name);
 			jar.setVersion(version);
+			
+			// manage known dependencies
 			String dependencyInput = getDialogueResponse("Do you want declare SOME known dependency for this library?" +
 					JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS);
-			while (GeneralsHelper.isStringOk(dependencyInput) && dependencyInput.equals("y")) {
+			while (GeneralsHelper.isBooleanTrue(dependencyInput)) {
 				String dependencyId = getDialogueResponse("dependency id");
 				if (!javabee.getJars().containsKey(dependencyId)) {
 					System.out.println("There's no library with the declared id");
@@ -334,9 +350,9 @@ public class ConsoleBO implements Console {
 			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
 			FileUtils.copyFile(targetFile, fileInsideLibrary);
 			this.javabeeService.updateState();
-			System.out.println("Library added successfully! " + jar.getId());
+			System.out.print("Command executed successfully, add completed: " + jar.getId());
 		} catch (Exception e) {
-			System.out.println("1[" + e.getMessage() + "]");
+			System.out.print("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -344,6 +360,8 @@ public class ConsoleBO implements Console {
 	@Override
 	public void delete(String idJar) {
 		try {
+			System.out.print("command javabee -delete\n\n");
+			
 			JavaBeeTO javabee = this.javabeeService.getCurrentState();
 			JarTO jar=null;
 			if ((jar = javabee.getJars().remove(idJar)) != null) {
@@ -360,8 +378,9 @@ public class ConsoleBO implements Console {
 			} else {
 				throw new IllegalArgumentException("Command failed! Jar Id: " + idJar + " not found.");
 			}
+			System.out.print("Command executed successfully, delete completed: " + jar.getId());
 		} catch (Exception e) {
-			System.out.println("1[" + e.getMessage() + "]");
+			System.out.print("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -377,7 +396,11 @@ public class ConsoleBO implements Console {
 		helpMessage.append("command javabee -help\n");
 		helpMessage.append(" -help[-h]                    show possible actions with its needed parameters\n");
 		helpMessage.append(" -version[-v]                 show version of the current JavaBee\n");
-		helpMessage.append(" -add(wizard prompt)          add a new library to JavaBee manage\n");
+		helpMessage.append(" -add                         add a new library to JavaBee manage\n");
+		helpMessage.append("   ( mandatory )\n");
+		helpMessage.append("   -file                      the full file (library) address\n");
+		helpMessage.append("   -name                      the name of the library in javabee's context\n");
+		helpMessage.append("   -version                   the version of the library\n");
 		helpMessage.append(" -delete[-d] \"jar id\"         delete a library from the current JavaBee\n");
 		helpMessage.append(" -update[-u] \"jar id\"         update info about some library\n");
 		helpMessage.append(" -export \"target file\"        export the current JavaBee's state\n");
@@ -402,13 +425,13 @@ public class ConsoleBO implements Console {
 		helpMessage.append("   ( mandatory )\n");
 		helpMessage.append("   -file                      a .jbf valid file address\n");
 		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -to                        the target directory to application compressed file\n");
+		helpMessage.append("   -to                        the target directory to the application compressed file\n");
 		System.out.print(helpMessage.toString());
 	}
 	
 	private static String getDialogueResponse(String mensage) {
 		System.out.print(mensage + ": ");
-		return new Scanner(System.in).next().trim();
+		return new Scanner(System.in).nextLine().trim();
 	}
 
 	private File getCurrentDirectory(ConsoleParameters consoleParameters) {

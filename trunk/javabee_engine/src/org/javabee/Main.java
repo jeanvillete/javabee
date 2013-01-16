@@ -25,11 +25,6 @@ public class Main {
 			ServiceFactory.getInstance().getConsole().printHelp();
 			return;
 		}
-		// version
-		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-version")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-v"))) {
-			ServiceFactory.getInstance().getConsole().printVersion();
-			return;
-		}
 		// list
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-list")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-l"))) {
 			ServiceFactory.getInstance().getConsole().list(consoleParameter);
@@ -37,7 +32,7 @@ public class Main {
 		}
 		// add
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-add"))) {
-			ServiceFactory.getInstance().getConsole().add();
+			ServiceFactory.getInstance().getConsole().add(consoleParameter);
 			return;
 		}
 		// delete
@@ -75,6 +70,11 @@ public class Main {
 		// unmount
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-unmount"))) {
 			ServiceFactory.getInstance().getConsole().unmount(consoleParameter);
+			return;
+		}
+		// version
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-version")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-v"))) {
+			ServiceFactory.getInstance().getConsole().printVersion();
 			return;
 		}
 		ServiceFactory.getInstance().getConsole().printHelp();

@@ -14,7 +14,7 @@ public interface Console {
 	void printHelp();
 	void printVersion();
 	void list(ConsoleParameters consoleParameter);
-	void add();
+	void add(ConsoleParameters consoleParameter);
 	void delete(String idJar);
 	void libraries(ConsoleParameters consoleParameter);
 	void mount(ConsoleParameters consoleParameter);
