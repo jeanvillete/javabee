@@ -19,5 +19,6 @@ public interface Console {
 	void libraries(ConsoleParameters consoleParameter);
 	void mount(ConsoleParameters consoleParameter);
 	void unmount(ConsoleParameters consoleParameter);
+	void update(ConsoleParameters consoleParameter);
 
 }

@@ -47,8 +47,9 @@ public class JavaBeePO {
 			SSDObject dependencies = library.get("dependencies");
 			if (dependencies != null) {
 				SSDObjectArray dependenciesArray = (SSDObjectArray) dependencies;
-				for (int j = 0; j < dependenciesArray.getSize(); j++)
+				for (int j = 0; j < dependenciesArray.getSize(); j++) {
 					jarTo.addDependency(new DependencyTO(dependenciesArray.getLeaf(j).getValue()));
+				}
 			}
 			javabeeTo.addJar(jarTo);
 		}
@@ -69,11 +70,11 @@ public class JavaBeePO {
 			library.addAttribute(new SSDObjectLeaf("filename", jarTo.getFilename()));
 			
 			if (GeneralsHelper.isCollectionOk(jarTo.getListDependencies())) {
+				SSDObjectArray dependencies = new SSDObjectArray("dependencies");
 				for (DependencyTO dependency : jarTo.getListDependencies()) {
-					SSDObjectArray dependencies = new SSDObjectArray("dependencies");
 					dependencies.addElement(new SSDObjectLeaf(dependency.getId(), dependency.getId()));
-					library.addAttribute(dependencies);
 				}
+				library.addAttribute(dependencies);
 			}
 			
 			libraries.addElement(library);
