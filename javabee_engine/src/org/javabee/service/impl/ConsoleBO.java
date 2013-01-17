@@ -345,10 +345,12 @@ public class ConsoleBO implements Console {
 				}
 			}
 			
+			// update javabee's state
 			javabee.getJars().put(jar.getId(), jar);
 			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
 			FileUtils.copyFile(targetFile, fileInsideLibrary);
 			this.javabeeService.updateState(javabee);
+			
 			System.out.print("Command executed successfully, add completed: " + jar.getId());
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
@@ -426,10 +428,11 @@ public class ConsoleBO implements Console {
 			// delete the current
 			this.deleteCurrentFileStructure(currentJar);
 			
-			// update the javabee state
+			// update the javabee's state
 			javabee.getJars().remove(currentJar.getId());
 			javabee.getJars().put(newJarTo.getId(), newJarTo);
 			this.javabeeService.updateState(javabee);
+			
 			System.out.print("Command executed successfully, update completed: " + newJarTo.getId());
 		} catch (Exception e) {
 			System.out.print("Error: " + e.getMessage());
