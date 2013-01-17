@@ -47,6 +47,7 @@ public class Main {
 		}
 		// update
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-update")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-u"))) {
+			ServiceFactory.getInstance().getConsole().update(consoleParameter);
 			return;
 		}
 		// export
