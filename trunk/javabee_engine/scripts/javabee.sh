@@ -6,6 +6,6 @@ fi
 
 APP_BIN_DIR=$(readlink -f $(dirname $0))
 CURRENT_DIR=$PWD
-PARAMETERS=$* -current_directory " $CURRENT_DIR "
+PARAMETERS="$* -current_directory $CURRENT_DIR"
 
 exec "$JAVA_HOME"/bin/java -jar "$APP_BIN_DIR"/javabee_engine.jar $PARAMETERS
