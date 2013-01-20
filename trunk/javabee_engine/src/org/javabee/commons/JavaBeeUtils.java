@@ -14,8 +14,7 @@ public class JavaBeeUtils {
 	* @return
 	*/
 	public static final File createTmpDir(String identifierTmpDir) {
-		String tmpDirPath = System.getProperty("java.io.tmpdir");
-		File tmpDir = new File(tmpDirPath + identifierTmpDir + Long.toString(System.nanoTime()));
+		File tmpDir = new File(System.getProperty("java.io.tmpdir"), identifierTmpDir + Long.toString(System.nanoTime()));
 		tmpDir.mkdir();
 		tmpDir.deleteOnExit();
 		return tmpDir;

@@ -9,7 +9,7 @@ import org.javabee.service.impl.ConsoleBO;
 import org.javabee.service.impl.JavaBeeBO;
 
 /**
- * @author villjea
+ * @author Jean Villete
  *
  */
 public class ServiceFactory {

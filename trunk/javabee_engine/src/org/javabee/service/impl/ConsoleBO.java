@@ -59,9 +59,9 @@ public class ConsoleBO implements Console {
 			
 			this.libraries(libraries, targetDirectoryParam, manageDependencies);
 			
-			System.out.print("Command executed successfully, libraries copied to: " + targetDirectoryParam);
+			System.out.println("Command executed successfully, libraries copied to: " + targetDirectoryParam);
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -128,9 +128,9 @@ public class ConsoleBO implements Console {
 			
 			tmpDir.delete();
 			
-			System.out.print("Command executed successfully, mount completed: " + jbf.getCanonicalPath());
+			System.out.println("Command executed successfully, mount completed: " + jbf.getCanonicalPath());
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -185,9 +185,9 @@ public class ConsoleBO implements Console {
 			
 			tmpDir.delete();
 			
-			System.out.print("Command executed successfully, unmount completed: " + jbfOutFile.getCanonicalPath());
+			System.out.println("Command executed successfully, unmount completed: " + jbfOutFile.getCanonicalPath());
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -239,10 +239,10 @@ public class ConsoleBO implements Console {
 				showSize = GeneralsHelper.isBooleanTrue(showSizeParam);
 			}
 			if (showSize) {
-				System.out.print("\nsize: " + listJar.size() + "\n");
+				System.out.println("\nsize: " + listJar.size());
 			}
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -351,9 +351,9 @@ public class ConsoleBO implements Console {
 			FileUtils.copyFile(targetFile, fileInsideLibrary);
 			this.javabeeService.updateState(javabee);
 			
-			System.out.print("Command executed successfully, add completed: " + jar.getId());
+			System.out.println("Command executed successfully, add completed: " + jar.getId());
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -428,35 +428,66 @@ public class ConsoleBO implements Console {
 			// delete the current
 			this.deleteCurrentFileStructure(currentJar);
 			
-			// update the javabee's state
+			// update dependencies
+			for (JarTO jarTo : javabee.getJars().values()) {
+				for (DependencyTO dependency : jarTo.getListDependencies()) {
+					if (dependency.getId().equals(currentJar.getId())) {
+						dependency.setId(newJarTo.getId());
+					}
+				}
+			}
+			
+			// remove the current id and set the new one
 			javabee.getJars().remove(currentJar.getId());
 			javabee.getJars().put(newJarTo.getId(), newJarTo);
+			
+			// update the javabee's state
 			this.javabeeService.updateState(javabee);
 			
-			System.out.print("Command executed successfully, update completed: " + newJarTo.getId());
+			System.out.println("Command executed successfully, update completed: " + newJarTo.getId());
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
 	
 	@Override
-	public void delete(String idJar) {
+	public void delete(ConsoleParameters consoleParameter) {
 		try {
 			System.out.print("command javabee -delete\n\n");
 			
+			// id param
+			String idParam = null;
+			if (!GeneralsHelper.isStringOk( idParam = consoleParameter.getValue("-id") )) {
+				throw new IllegalArgumentException("Parameter -id not found, and it's mandatory to -delete command");
+			}
+			
 			JavaBeeTO javabee = this.javabeeService.getCurrentState();
 			JarTO jar = null;
-			if ((jar = javabee.getJars().remove(idJar)) != null) {
+			if ((jar = javabee.getJars().remove(idParam)) != null) {
 				this.deleteCurrentFileStructure(jar);
+				
+				// delete dependencies
+				for (JarTO jarTo : javabee.getJars().values()) {
+					for (int i = 0; i < jarTo.getListDependencies().size(); i++) {
+						DependencyTO dependency = jarTo.getListDependencies().get(i);
+						if (dependency.getId().equals(jar.getId())) {
+							jarTo.getListDependencies().remove(dependency);
+						}
+					}
+				}
+				
+				// update javabee's state
 				this.javabeeService.updateState(javabee);
-				System.out.println("Jar removed successfully! Jar Id: " + idJar);
+				
+				System.out.println("Jar removed successfully! Jar Id: " + idParam);
 			} else {
-				throw new IllegalArgumentException("Command failed! Jar Id: " + idJar + " not found.");
+				throw new IllegalArgumentException("Command failed! Jar Id: " + idParam + " not found.");
 			}
-			System.out.print("Command executed successfully, delete completed: " + jar.getId());
+			
+			System.out.println("Command executed successfully, delete completed: " + jar.getId());
 		} catch (Exception e) {
-			System.out.print("Error: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 			return;
 		}
 	}
@@ -493,7 +524,9 @@ public class ConsoleBO implements Console {
 		helpMessage.append("   -version                   the version of the library\n");
 		helpMessage.append("   ( optional )\n");
 		helpMessage.append("   -dependencies              the list id dependencies splitted by comma(,)\n");
-		helpMessage.append(" -delete[-d] \"jar id\"         delete a library from the current JavaBee\n");
+		helpMessage.append(" -delete[-d]                  delete a library from the current JavaBee\n");
+		helpMessage.append("   ( mandatory )\n");
+		helpMessage.append("   -id                        the desired id library to be deleted\n");
 		helpMessage.append(" -update[-u]                  update info about some library\n");
 		helpMessage.append("   ( mandatory )\n");
 		helpMessage.append("   -id                        the desired id library to be updated\n");
@@ -524,6 +557,7 @@ public class ConsoleBO implements Console {
 		helpMessage.append("   -file                      a .jbf valid file address\n");
 		helpMessage.append("   ( optional )\n");
 		helpMessage.append("   -to                        the target directory to the application compressed file\n");
+		
 		System.out.print(helpMessage.toString());
 	}
 	
