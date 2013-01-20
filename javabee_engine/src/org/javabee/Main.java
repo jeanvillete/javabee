@@ -37,12 +37,7 @@ public class Main {
 		}
 		// delete
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-delete")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-d"))) {
-			String idJar = null;
-			if ((idJar = consoleParameter.getValue("-delete")) != null) {
-				ServiceFactory.getInstance().getConsole().delete(idJar);
-			} else if ((idJar = consoleParameter.getValue("-d")) != null) {
-				ServiceFactory.getInstance().getConsole().delete(idJar);
-			}
+			ServiceFactory.getInstance().getConsole().delete(consoleParameter);
 			return;
 		}
 		// update
