@@ -38,14 +38,14 @@ public class ConsoleBO implements Console {
 			// ids parameter
 			String libraries = null;
 			if (!GeneralsHelper.isStringOk( libraries = consoleParameter.getValue("-ids") )) {
-				throw new IllegalArgumentException("Parameter not -ids not found, and it's mandatory to -libraries command");
+				throw new IllegalArgumentException("Parameter -ids not found, and it's mandatory to -libraries command");
 			}
 			
 			// target directory parameter
 			String targetDirectoryParam = null;
 			if (!GeneralsHelper.isStringOk( targetDirectoryParam = consoleParameter.getValue("-target_directory") ) 
 					&& !GeneralsHelper.isStringOk( targetDirectoryParam = consoleParameter.getValue("-td") )) {
-				throw new IllegalArgumentException("Parameter not -ids not found, and it's mandatory to -libraries command");
+				throw new IllegalArgumentException("Parameter -ids not found, and it's mandatory to -libraries command");
 			}
 			
 			// managed dependencies parameter
