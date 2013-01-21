@@ -20,5 +20,7 @@ public interface Console {
 	void unmount(ConsoleParameters consoleParameter);
 	void update(ConsoleParameters consoleParameter);
 	void delete(ConsoleParameters consoleParameter);
+	void export(ConsoleParameters consoleParameter);
+	void importState(ConsoleParameters consoleParameter);
 
 }

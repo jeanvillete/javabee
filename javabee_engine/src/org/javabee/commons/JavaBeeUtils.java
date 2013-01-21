@@ -40,11 +40,15 @@ public class JavaBeeUtils {
 		return dbDir;
 	}
 	
-	public static String formatJarAddress(JarTO jar) {
+	public static String jarAddressInsideLibrary(JarTO jar) {
 		return  getBaseDir() +
 				System.getProperty("file.separator") +
 				JavaBeeConstants.LIBRARY_ROOT_ADDRESS +
-				System.getProperty("file.separator") + jar.getName() + 
+				formatJarAddress(jar);
+	}
+	
+	public static String formatJarAddress(JarTO jar) {
+		return System.getProperty("file.separator") + jar.getName() + 
 				System.getProperty("file.separator") + jar.getVersion() +
 				System.getProperty("file.separator") + jar.getFilename();
 	}

@@ -31,7 +31,11 @@ public class JavaBeePO {
 	}
 	
 	public JavaBeeTO getCurrentState() throws IOException {
-		SSDContextManager context = SSDContextManager.build(this.getFileData());
+		return this.getJavaBeeTOFromSSD(this.getFileData());
+	}
+	
+	public JavaBeeTO getJavaBeeTOFromSSD(File sourceSSD) {
+		SSDContextManager context = SSDContextManager.build(sourceSSD);
 		SSDObjectNode javabee = context.getRootObject().getNode("javabee");
 		
 		JavaBeeTO javabeeTo = new JavaBeeTO(javabee.getLeaf("version").getValue());
@@ -57,7 +61,7 @@ public class JavaBeePO {
 		return javabeeTo;
 	}
 	
-	public void updateState(JavaBeeTO javabeeTo) throws IOException {
+	public SSDContextManager getSSDFromJavaBeeTO(JavaBeeTO javabeeTo) {
 		SSDObjectNode javabee = new SSDObjectNode("javabee");
 		javabee.addAttribute(new SSDObjectLeaf("version", javabeeTo.getVersion()));
 		
@@ -83,7 +87,11 @@ public class JavaBeePO {
 		
 		SSDContextManager context = SSDContextManager.build();
 		context.getRootObject().addAttribute(javabee);
-		context.toFile(this.getFileData());
+		return context;
+	}
+	
+	public void updateState(JavaBeeTO javabeeTo) throws IOException {
+		this.getSSDFromJavaBeeTO(javabeeTo).toFile(this.getFileData());
 	}
 	
 	private File getFileData() throws IOException {

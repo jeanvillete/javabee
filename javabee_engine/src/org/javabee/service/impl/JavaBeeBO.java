@@ -3,6 +3,7 @@
  */
 package org.javabee.service.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import org.javabee.entities.JarTO;
 import org.javabee.entities.JavaBeeTO;
 import org.javabee.persistence.JavaBeePO;
 import org.javabee.service.JavaBee;
+import org.simplestructruedata.data.SSDContextManager;
 
 /**
  * @author Jean Villete
@@ -57,6 +59,16 @@ public class JavaBeeBO implements JavaBee {
 		return listLibraries;
 	}
 	
+	@Override
+	public JavaBeeTO getJavaBeeTOFromSSD(File sourceSSD) {
+		return new JavaBeePO().getJavaBeeTOFromSSD(sourceSSD);
+	}
+	
+	@Override
+	public List<JarTO> getDependencies(JarTO jar) throws IOException {
+		return getDependencies(jar, null);
+	}
+	
 	private List<JarTO> getDependencies(JarTO jar, Map<String, JarTO> baseList) throws IOException {
 		if (baseList == null) {
 			baseList = new HashMap<String, JarTO>();
@@ -70,6 +82,11 @@ public class JavaBeeBO implements JavaBee {
 			}
 		}
 		return new ArrayList<JarTO>(baseList.values());
+	}
+
+	@Override
+	public SSDContextManager getSSDFromJavaBeeTO(JavaBeeTO javabeeTo) {
+		return new JavaBeePO().getSSDFromJavaBeeTO(javabeeTo);
 	}
 	
 }
