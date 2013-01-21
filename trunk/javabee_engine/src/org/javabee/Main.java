@@ -47,10 +47,12 @@ public class Main {
 		}
 		// export
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-export"))) {
+			ServiceFactory.getInstance().getConsole().export(consoleParameter);
 			return;
 		}
 		// import
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-import"))) {
+			ServiceFactory.getInstance().getConsole().importState(consoleParameter);
 			return;
 		}
 		// libraries

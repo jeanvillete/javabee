@@ -76,7 +76,7 @@ public class ConsoleBO implements Console {
 		Boolean injectDependencies = GeneralsHelper.isBooleanTrue(manageDependencies);
 		
 		for (JarTO jar : this.javabeeService.listToMount(libraries, injectDependencies)) {
-			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
+			File fileInsideLibrary = new File(JavaBeeUtils.jarAddressInsideLibrary(jar));
 			FileUtils.copyFileToDirectory(fileInsideLibrary, targetDirectory);
 		}
 	}
@@ -347,7 +347,7 @@ public class ConsoleBO implements Console {
 			
 			// update javabee's state
 			javabee.getJars().put(jar.getId(), jar);
-			File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
+			File fileInsideLibrary = new File(JavaBeeUtils.jarAddressInsideLibrary(jar));
 			FileUtils.copyFile(targetFile, fileInsideLibrary);
 			this.javabeeService.updateState(javabee);
 			
@@ -420,13 +420,15 @@ public class ConsoleBO implements Console {
 				throw new IllegalArgumentException("No update value was found to do");
 			}
 			
-			// create the new file structure
-			File currentFile = new File(JavaBeeUtils.formatJarAddress(currentJar));
-			File targetFile = new File(JavaBeeUtils.formatJarAddress(newJarTo));
-			FileUtils.copyFile(currentFile, targetFile);
-			
-			// delete the current
-			this.deleteCurrentFileStructure(currentJar);
+			// create the new file structure, if the name or id has been changed
+			if (!currentJar.getId().equals(newJarTo.getId())) {
+				File currentFile = new File(JavaBeeUtils.jarAddressInsideLibrary(currentJar));
+				File targetFile = new File(JavaBeeUtils.jarAddressInsideLibrary(newJarTo));
+				FileUtils.copyFile(currentFile, targetFile);
+				
+				// delete the current
+				this.deleteCurrentFileStructure(currentJar);
+			}
 			
 			// update dependencies
 			for (JarTO jarTo : javabee.getJars().values()) {
@@ -496,7 +498,7 @@ public class ConsoleBO implements Console {
 	 * @param jar
 	 */
 	private void deleteCurrentFileStructure(JarTO jar) {
-		File fileInsideLibrary = new File(JavaBeeUtils.formatJarAddress(jar));
+		File fileInsideLibrary = new File(JavaBeeUtils.jarAddressInsideLibrary(jar));
 		fileInsideLibrary.delete();
 		File folderVersion = fileInsideLibrary.getParentFile();
 		folderVersion.delete();
@@ -507,56 +509,161 @@ public class ConsoleBO implements Console {
 	}
 	
 	@Override
+	public void export(ConsoleParameters consoleParameter) {
+		try {
+			System.out.print("command javabee -export\n\n");
+			
+			JavaBeeTO javabee = this.javabeeService.getCurrentState();
+			String parameter = null;
+			
+			// ids
+			JavaBeeTO javabeeExporting = new JavaBeeTO(javabee.getVersion());
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-ids"))) {
+				for (String id : parameter.split(",")) {
+					id = id.trim();
+					JarTO jar = null;
+					if ((jar = javabee.getJars().get(id)) == null) {
+						throw new IllegalArgumentException("Id not found: " + id);
+					}
+					javabeeExporting.getJars().put(jar.getId(), jar);
+					for (JarTO dependency : this.javabeeService.getDependencies(jar)) {
+						javabeeExporting.getJars().put(dependency.getId(), dependency);
+					}
+				}
+			} else {
+				javabeeExporting.setJars(javabee.getJars());
+			}
+			
+			// target directory
+			File targetDirectory = null;
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-target_directory"))) {
+				targetDirectory = new File(parameter);
+			} else {
+				targetDirectory = this.getCurrentDirectory(consoleParameter);
+			}
+			
+			// temp directory
+			File tmpDir = JavaBeeUtils.createTmpDir(JavaBeeConstants.JAVABEE_TMP_DIR);
+			
+			// pass throughout jars map
+			for (JarTO jar : javabeeExporting.getJars().values()) {
+				File sourceFile = new File(JavaBeeUtils.jarAddressInsideLibrary(jar));
+				File targetFile = new File(tmpDir, JavaBeeConstants.JAVABEE_LIBRARY + JavaBeeUtils.formatJarAddress(jar));
+				FileUtils.copyFile(sourceFile, targetFile);
+			}
+			
+			SSDContextManager context = this.javabeeService.getSSDFromJavaBeeTO(javabeeExporting);
+			context.toFile(new File(tmpDir, JavaBeeConstants.JAVABEE_DATA_FILE));
+			
+			// zip the tmp dir to JavaBee State file
+			File javaBeeState = new File(targetDirectory, JavaBeeConstants.JAVABEE_STATE_FILE_NAME);
+			ZipHelper zipping = new ZipHelper(tmpDir, javaBeeState);
+			zipping.compress();
+			
+			tmpDir.delete();
+			
+			System.out.println("Command executed successfully, export completed: " + javaBeeState.getCanonicalPath());
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+			return;
+		}
+	}
+
+	@Override
+	public void importState(ConsoleParameters consoleParameter) {
+		try {
+			System.out.print("command javabee -import\n\n");
+			
+			// file
+			String jbsParam = null;
+			File jbsFile = null;
+			if (GeneralsHelper.isStringOk(jbsParam = consoleParameter.getValue("-file"))) {
+				jbsFile = new File(jbsParam);
+				if (!jbsFile.exists() || !jbsFile.isFile()) {
+					throw new IllegalArgumentException("The file don't exists or isn't a file: " + jbsParam);
+				}
+			} else {
+				throw new IllegalArgumentException("Parameter -file not found, and it's mandatory to -import command");
+			}
+			
+			// override
+			Boolean override = GeneralsHelper.isBooleanTrue(consoleParameter.getValue("-override"));
+			
+			File tmpDir = JavaBeeUtils.createTmpDir(JavaBeeConstants.JAVABEE_TMP_DIR);
+			UnZipHelper unzipping = new UnZipHelper(jbsFile, tmpDir);
+			unzipping.decompress();
+			
+			// check if file descriptor exists
+			File javabeeData = new File(tmpDir, JavaBeeConstants.JAVABEE_DATA_FILE);
+			if (!javabeeData.exists() || !javabeeData.isFile()) {
+				throw new IllegalStateException("The file descriptor don't exists: " + JavaBeeConstants.JAVABEE_DATA_FILE);
+			}
+			
+			// update current state
+			JavaBeeTO currentState = this.javabeeService.getCurrentState();
+			JavaBeeTO javabeeImporting = this.javabeeService.getJavaBeeTOFromSSD(javabeeData);
+			for (JarTO jar : javabeeImporting.getJars().values()) {
+				if (!currentState.getJars().containsKey(jar.getId()) || override) {
+					File sourceFile = new File(tmpDir, JavaBeeConstants.JAVABEE_LIBRARY + JavaBeeUtils.formatJarAddress(jar));
+					File fileInsideLibrary = new File(JavaBeeUtils.jarAddressInsideLibrary(jar));
+					FileUtils.copyFile(sourceFile, fileInsideLibrary);
+					
+					currentState.addJar(jar);
+				}
+			}
+			this.javabeeService.updateState(currentState);
+			
+			System.out.println("Command executed successfully, import completed: " + jbsFile.getCanonicalPath() + " imported!");
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+			return;
+		}
+	}
+	
+	@Override
 	public void printVersion() {
-		System.out.println("command javabee -version: " + JavaBeeConstants.JAVA_BEE_VERSION);
+		System.out.println("command javabee -version: " + JavaBeeConstants.JAVABEE_VERSION);
 	}
 	
 	@Override
 	public void printHelp() {
 		StringBuffer helpMessage = new StringBuffer();
 		helpMessage.append("command javabee -help\n");
-		helpMessage.append(" -help[-h]                    show possible actions with its needed parameters\n");
-		helpMessage.append(" -version[-v]                 show version of the current JavaBee\n");
-		helpMessage.append(" -add                         add a new library to JavaBee manage\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -file                      the full file (library) address\n");
-		helpMessage.append("   -name                      the name of the library in javabee's context\n");
-		helpMessage.append("   -version                   the version of the library\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -dependencies              the list id dependencies splitted by comma(,)\n");
-		helpMessage.append(" -delete[-d]                  delete a library from the current JavaBee\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -id                        the desired id library to be deleted\n");
-		helpMessage.append(" -update[-u]                  update info about some library\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -id                        the desired id library to be updated\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -name                      the new name of the library\n");
-		helpMessage.append("   -version                   the new version of the library\n");
-		helpMessage.append("   -dependencies              the new list id dependencies splitted by comma(,)\n");
-		helpMessage.append(" -export \"target file\"        export the current JavaBee's state\n");
-		helpMessage.append(" -import \"source file\"        import a JavaBee's state\n");
-		helpMessage.append(" -list[-l]                    show the current stored libraries\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -columns[-c]               choice select columns(id,name,version,filename)\n");
-		helpMessage.append("   -show_header[-sh]          list header"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
-		helpMessage.append("   -show_dependencies[-sd]    list dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
-		helpMessage.append("   -sort_column[-sc]          order by column ASC(id,name,version,filename)\n");
-		helpMessage.append("   -sort_size[-sz]            show size at the end"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
-		helpMessage.append(" -libraries                   mount a directory with all desired libraries\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -ids                       a set with all desired id libraries\n");
-		helpMessage.append("   -target_directory          the target diretory to copy the desired libraries\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -manage_dependencies[-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
-		helpMessage.append(" -mount                       mount a file .jbf (JavaBee File) from a completed application file\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -file                      the current completed and compressed file address\n");
-		helpMessage.append(" -unmount                     return the .jbf (JavaBee File) to application's properly state\n");
-		helpMessage.append("   ( mandatory )\n");
-		helpMessage.append("   -file                      a .jbf valid file address\n");
-		helpMessage.append("   ( optional )\n");
-		helpMessage.append("   -to                        the target directory to the application compressed file\n");
+		helpMessage.append(" -help[-h]                      show possible actions with its needed parameters\n");
+		helpMessage.append(" -version[-v]                   show version of the current JavaBee\n");
+		helpMessage.append(" -add                           add a new library to JavaBee manage\n");
+		helpMessage.append("   -file                        the full file (library) address\n");
+		helpMessage.append("   -name                        the name of the library in javabee's context\n");
+		helpMessage.append("   -version                     the version of the library\n");
+		helpMessage.append("   [-dependencies]              the list id dependencies splitted by comma(,)\n");
+		helpMessage.append(" -delete[-d]                    delete a library from the current JavaBee\n");
+		helpMessage.append("   -id                          the desired id library to be deleted\n");
+		helpMessage.append(" -update[-u]                    update info about some library\n");
+		helpMessage.append("   -id                          the desired id library to be updated\n");
+		helpMessage.append("   [-name]                      the new name of the library\n");
+		helpMessage.append("   [-version]                   the new version of the library\n");
+		helpMessage.append("   [-dependencies]              the new list id dependencies splitted by comma(,)\n");
+		helpMessage.append(" -export                        export the current JavaBee's state to jbs file\n");
+		helpMessage.append("   [-ids]                       export just a desired set ids\n");
+		helpMessage.append("   [-target_directory]          target directory to save the .jbs file\n");
+		helpMessage.append(" -import                        import a JavaBee's state from a .jbs file\n");
+		helpMessage.append("   -file                        the target .jbs file\n");
+		helpMessage.append("   [-override]                  override some library if it exists"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append(" -list[-l]                      show the current stored libraries\n");
+		helpMessage.append("   [-columns][-c]               choice select columns(id,name,version,filename)\n");
+		helpMessage.append("   [-show_header][-sh]          list header"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append("   [-show_dependencies][-sd]    list dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append("   [-sort_column][-sc]          order by column ASC(id,name,version,filename)\n");
+		helpMessage.append("   [-sort_size][-sz]            show size at the end"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append(" -libraries                     mount a directory with all desired libraries\n");
+		helpMessage.append("   -ids                         a set with all desired id libraries\n");
+		helpMessage.append("   -target_directory            the target diretory to copy the desired libraries\n");
+		helpMessage.append("   [-manage_dependencies][-md]  inject or not dependencies"+ JavaBeeConstants.BOOLEAN_CONSOLE_OPTIONS +"\n");
+		helpMessage.append(" -mount                         mount a file .jbf (JavaBee File) from a completed application file\n");
+		helpMessage.append("   -file                        the current completed and compressed file address\n");
+		helpMessage.append(" -unmount                       return the .jbf (JavaBee File) to application's properly state\n");
+		helpMessage.append("   -file                        a .jbf valid file address\n");
+		helpMessage.append("   [-to]                        the target directory to the application compressed file\n");
 		
 		System.out.print(helpMessage.toString());
 	}
@@ -566,4 +673,5 @@ public class ConsoleBO implements Console {
 		currentDirectoryParam = currentDirectoryParam.trim();
 		return new File(currentDirectoryParam);
 	}
+
 }
