@@ -9,6 +9,7 @@
 	<property name="javabee-home-dist" value="${javabee-home}/dist"/>
 	<property name="javabee-home-temp" value="${javabee-home-dist}/temp/"/>
 	<property name="javabee-home-project" value="${javabee-home-temp}/${ant.project.name}"/>
+	<property name="javabee-home-temp-src" value="${javabee-home-project}/src"/>
 	<property name="javabee-home-temp-bin" value="${javabee-home-project}/bin"/>
 	<property name="javabee-home-temp-dependencies" value="${javabee-home-temp-bin}/dependencies"/>
 	<property name="javabee-home-temp-xmldata" value="${javabee-home-temp-bin}/data"/>
@@ -17,10 +18,14 @@
 	
 	<target name="dist-javabee">
 		<mkdir dir="${javabee-home-project}"/>
+		<mkdir dir="${javabee-home-temp-src}"/>
 		<mkdir dir="${javabee-home-project}/bin/dependencies"/>
 		<mkdir dir="${javabee-home-project}/bin/data"/>
 		<mkdir dir="${javabee-home-project}/library"/>
 		
+		<copy todir="${javabee-home-temp-src}">
+			<fileset dir="${javabee-home}/src"/>
+		</copy>
 		<copy todir="${javabee-home-temp-bin}">
 			<fileset dir="${javabee-home}/scripts"/>
 		</copy>
@@ -30,6 +35,21 @@
 		<copy todir="${javabee-home-temp-xmldata}">
 			<fileset dir="${javabee-home}/data"/>
 		</copy>
+		
+		<!-- set version and release data -->
+		<replace dir="${javabee-home-temp-src}/org/javabee/commons" includes="JavaBeeConstants.java"
+				token="ant:build:constant:version" value="1.0"/>
+		<replace dir="${javabee-home-temp-src}/org/javabee/commons" includes="JavaBeeConstants.java"
+				token="ant:build:constant:release" value="${javabee}.${day}"/>
+		
+		<!-- compile the src tmp directory with the correct version and release data -->
+		<javac srcdir="${javabee-home-temp-src}" destdir="${javabee-home}/bin" debug="yes" includeantruntime="false">
+			<classpath>
+				<fileset dir="${javabee-home-temp-dependencies}">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</javac>
 		
 		<!-- genereting javabee jar file -->
 		<!-- create a property containing all .jar files, prefix lib/, and seperated with a space -->
@@ -52,7 +72,10 @@
 				<attribute name="Class-Path" value="${libs.project}" />
 			</manifest>
 		</jar>
-
+		
+		<!-- delete the source tmp directory -->
+		<delete dir="${javabee-home-temp-src}"/>
+		
 		<zip destfile="${javabee-zip}">
 		    <zipfileset dir="${javabee-home-temp}" />
 		</zip>
