@@ -622,7 +622,10 @@ public class ConsoleBO implements Console {
 	
 	@Override
 	public void printVersion() {
-		System.out.println("command javabee -version: " + JavaBeeConstants.JAVABEE_VERSION);
+		System.out.print("command javabee -version\n\n");
+		
+		System.out.println("version: " + JavaBeeConstants.JAVABEE_VERSION);
+		System.out.println("release: " + JavaBeeConstants.JAVABEE_RELEASE);
 	}
 	
 	@Override
