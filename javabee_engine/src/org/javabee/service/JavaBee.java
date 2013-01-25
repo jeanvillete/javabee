@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.javabee.entities.JarTO;
+import org.javabee.entities.JavaBeeAppDescriptorTO;
 import org.javabee.entities.JavaBeeTO;
 import org.simplestructruedata.data.SSDContextManager;
 
@@ -25,5 +26,7 @@ public interface JavaBee {
 	public List<JarTO> getDependencies(JarTO jar) throws IOException;
 	public SSDContextManager getSSDFromJavaBeeTO(JavaBeeTO javabeeTo);
 	JavaBeeTO getJavaBeeTOFromSSD(File sourceSSD);
+	JavaBeeAppDescriptorTO getDescriptorFromSSD(File sourceSSD) throws IOException;
+	SSDContextManager getSSDFromDescriptor(JavaBeeAppDescriptorTO javaBeeDescriptor);
 	
 }

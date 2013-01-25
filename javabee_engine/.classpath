@@ -3,7 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_31"/>
 	<classpathentry kind="lib" path="dependencies/commons-io-1.4.jar"/>
-	<classpathentry kind="lib" path="dependencies/String_SimpleStructureData.20130116.1742.jar"/>
 	<classpathentry kind="lib" path="dependencies/tatu.20130120.1503.jar"/>
+	<classpathentry kind="lib" path="dependencies/String_SimpleStructureData.20130124.1609.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

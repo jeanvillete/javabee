@@ -22,5 +22,6 @@ public interface Console {
 	void delete(ConsoleParameters consoleParameter);
 	void export(ConsoleParameters consoleParameter);
 	void importState(ConsoleParameters consoleParameter);
+	void appDescriptor(ConsoleParameters consoleParameter);
 
 }
