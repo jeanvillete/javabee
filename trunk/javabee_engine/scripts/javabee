@@ -2,7 +2,7 @@
 # Script to invoke the JavaBee Org App on Linux Platform
 # 2012 12 29
 # ---------------------------------------------------------------------------
-if [ -z "$JAVA_HOME" -a -z "$JRE_HOME" ]; then
+if [ -z "$JAVA_HOME" ]; then
   echo "JAVA_HOME not defined"
   echo "No valid value was defined to JAVA_HOME environment variable, please, do it before!"
   exit 1

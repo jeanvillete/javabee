@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.javabee.entities.JarTO;
 
@@ -51,6 +53,16 @@ public class JavaBeeUtils {
 		return System.getProperty("file.separator") + jar.getName() + 
 				System.getProperty("file.separator") + jar.getVersion() +
 				System.getProperty("file.separator") + jar.getFilename();
+	}
+	
+	public static List<String> formatSetIdString(String setId) {
+		String[] splitedLibrary = setId.split(",");
+		List<String> returningList = new ArrayList<String>();
+		for (String id : splitedLibrary) {
+			id = id.trim();
+			returningList.add(id);
+		}
+		return returningList;
 	}
 	
 }

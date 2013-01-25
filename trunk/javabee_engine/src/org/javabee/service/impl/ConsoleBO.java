@@ -3,6 +3,7 @@ package org.javabee.service.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,7 +17,9 @@ import org.javabee.commons.JavaBeeConstants;
 import org.javabee.commons.JavaBeeUtils;
 import org.javabee.entities.DependencyTO;
 import org.javabee.entities.JarTO;
+import org.javabee.entities.JavaBeeAppDescriptorTO;
 import org.javabee.entities.JavaBeeTO;
+import org.javabee.entities.ManageDirectoryTO;
 import org.javabee.service.Console;
 import org.javabee.service.JavaBee;
 import org.simplestructruedata.data.SSDContextManager;
@@ -621,6 +624,89 @@ public class ConsoleBO implements Console {
 	}
 	
 	@Override
+	public void appDescriptor(ConsoleParameters consoleParameter) {
+		try {
+			System.out.print("command javabee -app_descriptor\n\n");
+			
+			File fileDescriptor = new File(this.getCurrentDirectory(consoleParameter), JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR);
+			JavaBeeAppDescriptorTO javaBeeDescriptor = null;
+			if (fileDescriptor.exists() && fileDescriptor.isFile()) {
+				javaBeeDescriptor = this.javabeeService.getDescriptorFromSSD(fileDescriptor);
+			} else {
+				javaBeeDescriptor = new JavaBeeAppDescriptorTO();
+			}
+			
+			String parameter = null;
+
+			// app_name param
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-app_name"))) {
+				javaBeeDescriptor.setAppName(parameter);
+			}
+			
+			// extract_name param
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-extract_name"))) {
+				javaBeeDescriptor.setExtractName(parameter);
+			}
+			
+			// target_directory param
+			String targetDirectory = null;
+			if (GeneralsHelper.isStringOk(targetDirectory = consoleParameter.getValue("-target_directory")) &&
+					javaBeeDescriptor.getManageDependencies().get(targetDirectory) == null) {
+				ManageDirectoryTO md = new ManageDirectoryTO();
+				md.setTargetDirectory(targetDirectory);
+				javaBeeDescriptor.getManageDependencies().put(md.getTargetDirectory(), md);
+			}
+			
+			// inject_dependency param
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-inject_dependency"))) {
+				if (!GeneralsHelper.isStringOk(targetDirectory)) {
+					throw new IllegalArgumentException("To indicate an -inject_dependency it's mandatory indicate what -target_directory you want update!");
+				}
+				javaBeeDescriptor.getManageDependencies().get(targetDirectory).setInjectDependencies(GeneralsHelper.isBooleanTrue(parameter));
+			}
+			
+			// set_id param
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-set_id"))) {
+				if (!GeneralsHelper.isStringOk(targetDirectory)) {
+					throw new IllegalArgumentException("To indicate an -set_id it's mandatory indicate what -target_directory you want update!");
+				}
+				javaBeeDescriptor.getManageDependencies().get(targetDirectory).setSetIds(JavaBeeUtils.formatSetIdString(parameter));
+			}
+			
+			// selective_removing
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-selective_removing"))) {
+				if (!GeneralsHelper.isStringOk(targetDirectory)) {
+					throw new IllegalArgumentException("To indicate an -selective_removing it's mandatory indicate what -target_directory you want update!");
+				}
+				List<String> selectiveRemoving = Arrays.asList(parameter.split(","));
+				javaBeeDescriptor.getManageDependencies().get(targetDirectory).setSelectiveRemoving(selectiveRemoving);
+			}
+			
+			// remove_target
+			if (GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-remove_target"))) {
+				if (!GeneralsHelper.isStringOk(targetDirectory)) {
+					throw new IllegalArgumentException("To indicate an -remove_target it's mandatory indicate what -target_directory you want remove!");
+				}
+				javaBeeDescriptor.getManageDependencies().remove(targetDirectory);
+			}
+			
+			SSDContextManager ssdCtx = this.javabeeService.getSSDFromDescriptor(javaBeeDescriptor);
+			
+			// show param
+			if (!GeneralsHelper.isStringOk(parameter = consoleParameter.getValue("-show"))) {
+				ssdCtx.toFile(fileDescriptor);
+			}
+			
+			System.out.println(ssdCtx.toString());
+			
+			System.out.println("Command executed successfully, application descriptor created: " + fileDescriptor.getCanonicalPath());
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+			return;
+		}
+	}
+	
+	@Override
 	public void printVersion() {
 		System.out.print("command javabee -version\n\n");
 		
@@ -667,6 +753,15 @@ public class ConsoleBO implements Console {
 		helpMessage.append(" -unmount                       return the .jbf (JavaBee File) to application's properly state\n");
 		helpMessage.append("   -file                        a .jbf valid file address\n");
 		helpMessage.append("   [-to]                        the target directory to the application compressed file\n");
+		helpMessage.append(" -app_descriptor                command to generate or update a " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " file\n");
+		helpMessage.append("   [-show]                      just show the state of the " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " file\n");
+		helpMessage.append("   [-app_name]                  the application name to " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " file\n");
+		helpMessage.append("   [-extract_name]              the desired file name when extracted from .jbf (JavaBee File)\n");
+		helpMessage.append("   [-target_directory]          a managed target directory that holds libraries\n");
+		helpMessage.append("   [-inject_dependency]         inject or don't dependencies to this target_directory\n");
+		helpMessage.append("   [-set_id]                    the set id dependencies that will be place in this target_directoy\n");
+		helpMessage.append("   [-selective_removing]        the name of the files that will be removed from this target_directory\n");
+		helpMessage.append("   [-remove_target]             parameter to remove the current target_directory from the " + JavaBeeConstants.JAVABEE_FILE_DESCRIPTOR + " file\n");
 		
 		System.out.print(helpMessage.toString());
 	}

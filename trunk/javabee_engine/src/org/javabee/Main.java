@@ -70,6 +70,11 @@ public class Main {
 			ServiceFactory.getInstance().getConsole().unmount(consoleParameter);
 			return;
 		}
+		// app_descriptor
+		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-app_descriptor"))) {
+			ServiceFactory.getInstance().getConsole().appDescriptor(consoleParameter);
+			return;
+		}
 		// version
 		if (GeneralsHelper.isStringOk(consoleParameter.getValue("-version")) || GeneralsHelper.isStringOk(consoleParameter.getValue("-v"))) {
 			ServiceFactory.getInstance().getConsole().printVersion();
